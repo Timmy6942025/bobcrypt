@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'none'; img-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none';">
+  <meta name="description" content="Encyphrix - Paranoid-grade encryption. Client-side only. No servers. No tracking.">
+  <title>Encyphrix | Ultimate Encryption</title>
+  <style>
+    /* === BOLD AESTHETIC: Cyber-Security Noir ===
+     * Direction: Brutally minimal, high-contrast, terminal-inspired
+     * Typography: Monospace for authenticity, system-ui for readability
+     * Colors: Deep void black with electric accent
+     */
+
+    :root {
+      --void: #0a0a0f;
+      --void-light: #12121a;
+      --void-lighter: #1a1a25;
+      --void-lightest: #252535;
+      --electric: #00ff88;
+      --electric-dim: #00cc6a;
+      --electric-glow: rgba(0, 255, 136, 0.3);
+      --danger: #ff3366;
+      --danger-dim: #cc2952;
+      --warning: #ffaa00;
+      --info: #00aaff;
+      --text-primary: #e8e8f0;
+      --text-secondary: #8888a0;
+      --text-muted: #555570;
+      --border: #2a2a3a;
+      --border-focus: var(--electric);
+      --shadow-glow: 0 0 20px rgba(0, 255, 136, 0.15);
+      --shadow-subtle: 0 4px 24px rgba(0, 0, 0, 0.4);
+      --shadow-danger: 0 0 20px rgba(255, 51, 102, 0.15);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --transition-fast: 0.15s ease;
+      --transition-base: 0.2s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      background: var(--void);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* === HEADER === */
+    header {
+      padding: 2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--void-light) 0%, var(--void) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--electric), transparent);
+      opacity: 0.5;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--electric);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: var(--void);
+      box-shadow: var(--shadow-glow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-icon::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { transform: translateX(-100%); }
+      50% { transform: translateX(100%); }
+    }
+
+    .brand-text h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--void-lighter);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      color: var(--electric);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .security-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--electric);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--electric);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.9); }
+    }
+
+    /* === MAIN CONTENT === */
+    main {
+      flex: 1;
+      padding: 2rem 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .app-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* === CARDS === */
+    .card {
+      background: var(--void-light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-subtle);
+      transition: border-color var(--transition-base), box-shadow var(--transition-base);
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      opacity: 0;
+      transition: opacity var(--transition-base);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card:hover {
+      border-color: var(--border-focus);
+      box-shadow: var(--shadow-glow), var(--shadow-subtle);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--void-lighter);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.125rem;
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* === FORM ELEMENTS === */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .char-counter {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .char-counter.warning {
+      color: var(--warning);
+    }
+
+    .char-counter.danger {
+      color: var(--danger);
+    }
+
+    .form-input,
+    .form-textarea {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: var(--void);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9375rem;
+      transition: border-color var(--transition-base), box-shadow var(--transition-base);
+      outline: none;
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 140px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 0.25rem;
+      font-size: 1.125rem;
+      transition: color var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+    }
+
+    .password-toggle:hover {
+      color: var(--text-primary);
+      background: var(--void-lighter);
+    }
+
+    .password-toggle:focus {
+      outline: 2px solid var(--electric);
+      outline-offset: 2px;
+    }
+
+    /* === BUTTONS === */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.5rem;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      outline: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform 0.5s ease;
+    }
+
+    .btn:hover::after {
+      transform: translateX(100%);
+    }
+
+    .btn-primary {
+      background: var(--electric);
+      color: var(--void);
+      box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: var(--electric-dim);
+      box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      background: var(--void-lighter);
+      color: var(--text-muted);
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: var(--void-lighter);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+      border-color: var(--text-secondary);
+    }
+
+    .btn-secondary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+      box-shadow: 0 4px 12px rgba(255, 51, 102, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: var(--danger-dim);
+      box-shadow: 0 6px 20px rgba(255, 51, 102, 0.4);
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn-group .btn {
+      flex: 1;
+    }
+
+    /* === OUTPUT AREA === */
+    .output-wrapper {
+      margin-top: 1rem;
+      position: relative;
+    }
+
+    .output-area {
+      padding: 1rem;
+      background: var(--void);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      min-height: 100px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      word-break: break-all;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+
+    .output-area:empty::before {
+      content: 'Encrypted output will appear here...';
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .output-area.decrypt:empty::before {
+      content: 'Decrypted text will appear here...';
+    }
+
+    .output-area.success {
+      border-color: var(--electric);
+      background: linear-gradient(135deg, var(--void) 0%, rgba(0, 255, 136, 0.05) 100%);
+    }
+
+    .output-area.error {
+      border-color: var(--danger);
+      background: linear-gradient(135deg, var(--void) 0%, rgba(255, 51, 102, 0.05) 100%);
+      color: var(--danger);
+    }
+
+    /* === PASSWORD STRENGTH METER === */
+    .strength-section {
+      grid-column: 1 / -1;
+    }
+
+    .strength-meter {
+      margin-top: 0.75rem;
+    }
+
+    .strength-bar-container {
+      height: 6px;
+      background: var(--void);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .strength-bar {
+      height: 100%;
+      width: 0;
+      border-radius: 3px;
+      transition: width var(--transition-base), background-color var(--transition-base);
+      position: relative;
+    }
+
+    .strength-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 20px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+    }
+
+    .strength-bar.weak {
+      width: 25%;
+      background: var(--danger);
+      box-shadow: 0 0 10px rgba(255, 51, 102, 0.4);
+    }
+
+    .strength-bar.fair {
+      width: 50%;
+      background: var(--warning);
+      box-shadow: 0 0 10px rgba(255, 170, 0, 0.4);
+    }
+
+    .strength-bar.good {
+      width: 75%;
+      background: var(--info);
+      box-shadow: 0 0 10px rgba(0, 170, 255, 0.4);
+    }
+
+    .strength-bar.strong {
+      width: 100%;
+      background: var(--electric);
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+    }
+
+    .strength-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+      font-size: 0.8125rem;
+    }
+
+    .strength-label {
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .strength-label.weak { color: var(--danger); }
+    .strength-label.fair { color: var(--warning); }
+    .strength-label.good { color: var(--info); }
+    .strength-label.strong { color: var(--electric); }
+
+    .crack-time {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .strength-suggestions {
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--void);
+      border-radius: var(--radius-sm);
+      border-left: 3px solid var(--warning);
+    }
+
+    .strength-suggestions:empty {
+      display: none;
+    }
+
+    .suggestion-item {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .suggestion-item::before {
+      content: '→';
+      color: var(--warning);
+    }
+
+    .suggestion-item:last-child {
+      margin-bottom: 0;
+    }
+
+    /* === STATUS MESSAGES === */
+    .status-message {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      margin-top: 0.75rem;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .status-message.success {
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid var(--electric);
+      color: var(--electric);
+    }
+
+    .status-message.error {
+      background: rgba(255, 51, 102, 0.1);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+    }
+
+    .status-message.info {
+      background: rgba(0, 170, 255, 0.1);
+      border: 1px solid var(--info);
+      color: var(--info);
+    }
+
+    /* === FOOTER === */
+    footer {
+      padding: 1.5rem;
+      border-top: 1px solid var(--border);
+      background: var(--void-light);
+      margin-top: auto;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+
+    .footer-links a:hover {
+      color: var(--electric);
+    }
+
+    /* === UTILITY === */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .mt-1 { margin-top: 0.5rem; }
+    .mt-2 { margin-top: 1rem; }
+    .mt-3 { margin-top: 1.5rem; }
+
+    /* === SCROLLBAR === */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--void);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    /* === LOADING SPINNER === */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--void);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* === RESPONSIVE ADJUSTMENTS === */
+    @media (max-width: 600px) {
+      header {
+        padding: 1.5rem 1rem;
+      }
+
+      .brand-text h1 {
+        font-size: 1.25rem;
+      }
+
+      main {
+        padding: 1.5rem 1rem;
+      }
+
+      .card {
+        padding: 1.25rem;
+      }
+
+      .btn-group {
+        flex-direction: column;
+      }
+
+      .strength-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+      }
+    }
+
+    /* === FOCUS VISIBLE === */
+    :focus-visible {
+      outline: 2px solid var(--electric);
+      outline-offset: 2px;
+    }
+
+    button:focus:not(:focus-visible),
+    input:focus:not(:focus-visible),
+    textarea:focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    /* === KEY MANAGER STYLES === */
+    #key-manager-section {
+      border: 2px solid var(--electric);
+    }
+
+    .key-manager-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      font-size: 0.875rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .tab-btn.active {
+      background: var(--electric);
+      color: var(--void);
+      border-color: var(--electric);
+    }
+
+    .tab-btn:hover {
+      border-color: var(--electric);
+      color: var(--electric);
+    }
+
+    .tab-btn.active:hover {
+      color: var(--void);
+    }
+
+    .tab-content {
+      padding: 1rem 0;
+    }
+
+    #master-password-setup,
+    #unlock-vault {
+      padding: 1rem;
+      background: var(--void-light);
+      border-radius: 8px;
+    }
+
+    /* Key Generator Styles */
+    .key-generator h3,
+    .manual-entry h3,
+    .export-import h3 {
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .key-type-selector {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .key-type-selector button {
+      flex: 1;
+      padding: 0.5rem;
+      background: var(--void);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      border-radius: var(--radius-sm);
+    }
+
+    .key-type-selector button.active {
+      background: var(--electric);
+      color: var(--void);
+      border-color: var(--electric);
+    }
+
+    .generated-key-display {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .generated-key-display input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .key-name-input {
+      margin-bottom: 1rem;
+    }
+
+    .key-name-input label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Manual Entry Styles */
+    .manual-entry .help-text {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .validation-msg {
+      font-size: 0.8125rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .validation-msg.error {
+      color: var(--danger);
+      display: block;
+    }
+
+    .validation-msg.success {
+      color: var(--electric);
+      display: block;
+    }
+
+    .status-msg {
+      font-size: 0.875rem;
+      margin-top: 0.75rem;
+      padding: 0.5rem;
+      border-radius: var(--radius-sm);
+      display: none;
+    }
+
+    .status-msg.error {
+      color: var(--danger);
+      background: rgba(255, 51, 102, 0.1);
+      border: 1px solid var(--danger);
+      display: block;
+    }
+
+    .status-msg.success {
+      color: var(--electric);
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid var(--electric);
+      display: block;
+    }
+
+    /* Key List Styles */
+    .key-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .key-list-header h3 {
+      margin: 0;
+    }
+
+    .key-count {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .key-list-container {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .key-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--void);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .key-item:hover {
+      border-color: var(--electric);
+    }
+
+    .key-item--selected {
+      border-color: var(--electric);
+      background: rgba(0, 255, 136, 0.05);
+    }
+
+    .key-icon {
+      font-size: 1.25rem;
+    }
+
+    .key-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .key-name {
+      display: block;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .key-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .key-type {
+      color: var(--text-secondary);
+    }
+
+    .key-date-separator {
+      margin: 0 0.25rem;
+    }
+
+    .key-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .key-actions button {
+      padding: 0.25rem 0.5rem;
+      background: var(--void-lighter);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .key-actions button:hover {
+      border-color: var(--electric);
+      color: var(--electric);
+    }
+
+    .btn-select-key {
+      background: var(--electric) !important;
+      color: var(--void) !important;
+      border-color: var(--electric) !important;
+    }
+
+    .btn-select-key:hover {
+      background: var(--electric-dim) !important;
+    }
+
+    .btn-delete-key:hover {
+      background: var(--danger) !important;
+      color: white !important;
+      border-color: var(--danger) !important;
+    }
+
+    .no-keys-message {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .empty-state {
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Export/Import Styles */
+    .export-import h4 {
+      margin: 1rem 0 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .export-import .warning {
+      color: var(--warning);
+      font-size: 0.8125rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .export-import hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    .export-import label {
+      display: block;
+      margin: 0.75rem 0 0.25rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .export-import textarea {
+      width: 100%;
+      font-family: monospace;
+      font-size: 0.75rem;
+    }
+
+    .export-import input[type="file"] {
+      width: 100%;
+      padding: 0.5rem;
+      background: var(--void);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+    }
+
+    .export-section,
+    .import-section {
+      margin-bottom: 1rem;
+    }
+
+    #export-data {
+      margin-top: 0.75rem;
+    }
+
+    #export-data button {
+      margin-top: 0.5rem;
+      margin-right: 0.5rem;
+    }
+
+    /* Copied state */
+    .copied {
+      color: var(--electric) !important;
+    }
+
+    .saved {
+      background: var(--electric) !important;
+      color: var(--void) !important;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="brand">
+        <div class="brand-icon">E</div>
+        <div class="brand-text">
+          <h1>Encyphrix</h1>
+          <p>Paranoid-Grade Encryption</p>
+        </div>
+      </div>
+      <div class="security-badge">Offline Mode</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="app-grid">
+      <!-- Key Manager Section -->
+      <section class="card" id="key-manager-section" style="grid-column: 1 / -1;">
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">🔐</div>
+          <h2 class="card-title">Key Manager</h2>
+        </div>
+
+        <!-- Master Password Setup (shown if no vault) -->
+        <div id="master-password-setup">
+          <p style="margin-bottom: 1rem; color: var(--text-secondary);">Create a master password to secure your keys:</p>
+          <div class="form-group">
+            <input type="password" id="master-password" class="form-input" placeholder="Master password" />
+          </div>
+          <div class="form-group">
+            <input type="password" id="master-password-confirm" class="form-input" placeholder="Confirm master password" />
+          </div>
+          <button id="create-vault-btn" class="btn btn-primary">Create Vault</button>
+        </div>
+
+        <!-- Unlock Vault (shown if vault exists but locked) -->
+        <div id="unlock-vault" style="display: none;">
+          <p style="margin-bottom: 1rem; color: var(--text-secondary);">Enter master password to unlock your keys:</p>
+          <div class="form-group">
+            <input type="password" id="unlock-password" class="form-input" placeholder="Master password" />
+          </div>
+          <button id="unlock-btn" class="btn btn-primary">Unlock Vault</button>
+        </div>
+
+        <!-- Key Manager UI (shown when unlocked) -->
+        <div id="key-manager-ui" style="display: none;">
+          <div class="key-manager-tabs">
+            <button class="tab-btn active" data-tab="generate">Generate Key</button>
+            <button class="tab-btn" data-tab="manual">Manual Entry</button>
+            <button class="tab-btn" data-tab="list">My Keys</button>
+            <button class="tab-btn" data-tab="backup">Backup</button>
+          </div>
+
+          <div class="tab-content" id="tab-generate">
+            <!-- Key Generator UI mounted here -->
+          </div>
+          <div class="tab-content" id="tab-manual" style="display: none;">
+            <!-- Manual Entry UI mounted here -->
+          </div>
+          <div class="tab-content" id="tab-list" style="display: none;">
+            <!-- Key List UI mounted here -->
+          </div>
+          <div class="tab-content" id="tab-backup" style="display: none;">
+            <!-- Export/Import UI mounted here -->
+          </div>
+
+          <button id="lock-vault-btn" class="btn btn-secondary btn-full" style="margin-top: 1rem;">🔒 Lock Vault</button>
+        </div>
+      </section>
+
+      <!-- Encrypt Section -->
+      <section class="card" aria-labelledby="encrypt-heading">
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">🔒</div>
+          <h2 id="encrypt-heading" class="card-title">Encrypt</h2>
+        </div>
+
+        <form id="encrypt-form">
+          <div class="form-group">
+            <label for="plaintext" class="form-label">
+              <span>Text to Encrypt</span>
+              <span id="plaintext-counter" class="char-counter">0 characters</span>
+            </label>
+            <textarea 
+              id="plaintext" 
+              class="form-textarea" 
+              placeholder="Enter your secret message here..."
+              aria-describedby="plaintext-help"
+              maxlength="10000"
+            ></textarea>
+            <span id="plaintext-help" class="visually-hidden">Enter the text you want to encrypt. Maximum 10,000 characters.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="encrypt-key-select" class="form-label">Select Key</label>
+            <select id="encrypt-key-select" class="form-input" style="cursor: pointer;">
+              <option value="">-- Select a saved key --</option>
+            </select>
+            <button id="use-manual-password-encrypt" type="button" class="btn btn-secondary" style="margin-top: 0.5rem; width: 100%;">Enter Password Manually</button>
+          </div>
+
+          <div id="manual-password-group-encrypt" class="form-group" style="display: none;">
+            <label for="encrypt-password" class="form-label">Password</label>
+            <div class="password-wrapper">
+              <input 
+                type="password" 
+                id="encrypt-password" 
+                class="form-input" 
+                placeholder="Enter a strong password..."
+                aria-describedby="encrypt-password-help"
+                autocomplete="off"
+              >
+              <button 
+                type="button" 
+                class="password-toggle" 
+                id="encrypt-password-toggle"
+                aria-label="Toggle password visibility"
+                aria-pressed="false"
+              >
+                <span aria-hidden="true">👁</span>
+              </button>
+            </div>
+            <span id="encrypt-password-help" class="visually-hidden">Choose a strong, unique password for encryption</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; text-transform: none; font-weight: normal; letter-spacing: normal;">
+              <input 
+                type="checkbox" 
+                id="enable-duress"
+                style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--electric);"
+              >
+              <span>Enable duress password (coercion resistance)</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; text-transform: none; font-weight: normal; letter-spacing: normal;">
+              <input 
+                type="checkbox" 
+                id="enable-self-destruct"
+                style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--danger);"
+              >
+              <span style="color: var(--danger);">One-time decryption (self-destruct)</span>
+            </label>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; margin-left: 26px;">
+              Recipient will see a warning that this message is intended for one-time viewing.
+              <strong style="color: var(--warning);">Cannot prevent copying.</strong>
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; text-transform: none; font-weight: normal; letter-spacing: normal;">
+              <input 
+                type="checkbox" 
+                id="enable-stealth"
+                style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--info);"
+              >
+              <span style="color: var(--info);">Enable stealth mode (hide ciphertext structure)</span>
+            </label>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; margin-left: 26px;">
+              Makes encrypted output appear as random data. Helps avoid detection.
+            </p>
+          </div>
+
+          <div id="stealth-fields" style="display: none;">
+            <div class="form-group">
+              <label for="stealth-mode" class="form-label">Stealth Mode Type</label>
+              <select id="stealth-mode" class="form-input" style="cursor: pointer;">
+                <option value="noise">Random Noise (hides structure)</option>
+                <option value="padding">Padding (hides message length)</option>
+                <option value="combined">Combined (maximum obfuscation)</option>
+              </select>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                <strong>Noise:</strong> Prepends random bytes • <strong>Padding:</strong> Fixed-size output • <strong>Combined:</strong> Both
+              </p>
+            </div>
+          </div>
+
+          <div id="duress-fields" style="display: none;">
+            <div class="form-group">
+              <label for="duress-password" class="form-label">Duress Password</label>
+              <div class="password-wrapper">
+                <input 
+                  type="password" 
+                  id="duress-password" 
+                  class="form-input" 
+                  placeholder="Enter duress password (different from primary)..."
+                  aria-describedby="duress-password-help"
+                  autocomplete="off"
+                >
+                <button 
+                  type="button" 
+                  class="password-toggle" 
+                  id="duress-password-toggle"
+                  aria-label="Toggle duress password visibility"
+                  aria-pressed="false"
+                >
+                  <span aria-hidden="true">👁</span>
+                </button>
+              </div>
+              <span id="duress-password-help" class="visually-hidden">Enter a duress password different from your primary password</span>
+            </div>
+
+            <div class="form-group">
+              <label for="fake-plaintext" class="form-label">
+                <span>Fake Message (shown with duress password)</span>
+                <span id="fake-plaintext-counter" class="char-counter">0 characters</span>
+              </label>
+              <textarea 
+                id="fake-plaintext" 
+                class="form-textarea" 
+                placeholder="Enter a fake/decoy message to display when duress password is used..."
+                aria-describedby="fake-plaintext-help"
+                maxlength="10000"
+                style="min-height: 80px;"
+              ></textarea>
+              <span id="fake-plaintext-help" class="visually-hidden">Enter a fake message that will be shown when someone uses the duress password</span>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-full" id="encrypt-btn">
+            <span aria-hidden="true">🔐</span> Encrypt Message
+          </button>
+
+          <div id="encrypt-status" class="status-message" style="display: none;" role="status" aria-live="polite"></div>
+
+          <div class="output-wrapper">
+            <label class="form-label">Encrypted Output</label>
+            <div id="ciphertext-output" class="output-area" role="region" aria-live="polite"></div>
+          </div>
+
+          <div class="btn-group mt-2">
+            <button type="button" class="btn btn-secondary" id="copy-encrypt-btn" disabled>
+              <span aria-hidden="true">📋</span> Copy
+            </button>
+            <button type="button" class="btn btn-secondary" id="clear-encrypt-btn">
+              <span aria-hidden="true">🗑</span> Clear
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Decrypt Section -->
+      <section class="card" aria-labelledby="decrypt-heading">
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">🔓</div>
+          <h2 id="decrypt-heading" class="card-title">Decrypt</h2>
+        </div>
+
+        <form id="decrypt-form">
+          <div class="form-group">
+            <label for="ciphertext" class="form-label">
+              <span>Encrypted Text</span>
+              <span id="ciphertext-counter" class="char-counter">0 characters</span>
+            </label>
+            <textarea 
+              id="ciphertext" 
+              class="form-textarea" 
+              placeholder="Paste encrypted text here..."
+              aria-describedby="ciphertext-help"
+              maxlength="50000"
+            ></textarea>
+            <span id="ciphertext-help" class="visually-hidden">Paste the encrypted text you want to decrypt</span>
+          </div>
+
+          <div class="form-group">
+            <label for="decrypt-key-select" class="form-label">Select Key</label>
+            <select id="decrypt-key-select" class="form-input" style="cursor: pointer;">
+              <option value="">-- Select a saved key --</option>
+            </select>
+            <button id="use-manual-password-decrypt" type="button" class="btn btn-secondary" style="margin-top: 0.5rem; width: 100%;">Enter Password Manually</button>
+          </div>
+
+          <div id="manual-password-group-decrypt" class="form-group" style="display: none;">
+            <label for="decrypt-password" class="form-label">Password</label>
+            <div class="password-wrapper">
+              <input 
+                type="password" 
+                id="decrypt-password" 
+                class="form-input" 
+                placeholder="Enter the password..."
+                aria-describedby="decrypt-password-help"
+                autocomplete="off"
+              >
+              <button 
+                type="button" 
+                class="password-toggle" 
+                id="decrypt-password-toggle"
+                aria-label="Toggle password visibility"
+                aria-pressed="false"
+              >
+                <span aria-hidden="true">👁</span>
+              </button>
+            </div>
+            <span id="decrypt-password-help" class="visually-hidden">Enter the password used to encrypt this message</span>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-full" id="decrypt-btn">
+            <span aria-hidden="true">🔓</span> Decrypt Message
+          </button>
+
+          <div id="decrypt-status" class="status-message" style="display: none;" role="status" aria-live="polite"></div>
+
+          <div class="output-wrapper">
+            <label class="form-label">Decrypted Output</label>
+            <div id="plaintext-output" class="output-area decrypt" role="region" aria-live="polite"></div>
+          </div>
+
+          <div class="btn-group mt-2">
+            <button type="button" class="btn btn-secondary" id="copy-decrypt-btn" disabled>
+              <span aria-hidden="true">📋</span> Copy
+            </button>
+            <button type="button" class="btn btn-secondary" id="clear-decrypt-btn">
+              <span aria-hidden="true">🗑</span> Clear
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Password Strength Section -->
+      <section class="card strength-section" aria-labelledby="strength-heading">
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">🛡️</div>
+          <h2 id="strength-heading" class="card-title">Password Strength Analyzer</h2>
+        </div>
+
+        <div class="form-group">
+          <label for="strength-password" class="form-label">Test Password Strength</label>
+          <div class="password-wrapper">
+            <input 
+              type="password" 
+              id="strength-password" 
+              class="form-input" 
+              placeholder="Type a password to analyze..."
+              aria-describedby="strength-help"
+              autocomplete="off"
+            >
+            <button 
+              type="button" 
+              class="password-toggle" 
+              id="strength-password-toggle"
+              aria-label="Toggle password visibility"
+              aria-pressed="false"
+            >
+              <span aria-hidden="true">👁</span>
+            </button>
+          </div>
+          <span id="strength-help" class="visually-hidden">Enter a password to see real-time strength analysis</span>
+
+          <div class="strength-meter">
+            <div class="strength-bar-container" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-label="Password strength" id="strength-bar-container">
+              <div class="strength-bar" id="strength-bar"></div>
+            </div>
+            <div class="strength-info">
+              <span class="strength-label" id="strength-label">Enter a password</span>
+              <span class="crack-time" id="crack-time"></span>
+            </div>
+            <div class="strength-suggestions" id="strength-suggestions" role="list"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <p>Client-side only • No data leaves your device • Open source</p>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="#" class="footer-link">Security</a>
+        <a href="#" class="footer-link">Privacy</a>
+        <a href="#" class="footer-link">GitHub</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="./lib/zxcvbn.js"></script>
+  <script type="module">
+    import { initCrypto, encrypt, decrypt } from './crypto.js';
+    import { initStrengthMeter } from './password-strength.js';
+
+    // Initialize crypto on page load
+    let cryptoInitialized = false;
+    
+    async function initializeCrypto() {
+      try {
+        await initCrypto();
+        cryptoInitialized = true;
+        console.log('Crypto initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize crypto:', error);
+        showStatus('encrypt-status', 'Failed to initialize encryption library. Please refresh the page.', 'error');
+        showStatus('decrypt-status', 'Failed to initialize encryption library. Please refresh the page.', 'error');
+      }
+    }
+
+    initializeCrypto();
+
+    // Utility: Show status message
+    function showStatus(elementId, message, type = 'info') {
+      const element = document.getElementById(elementId);
+      element.textContent = message;
+      element.className = `status-message ${type}`;
+      element.style.display = 'flex';
+      
+      // Auto-hide after 5 seconds for success messages
+      if (type === 'success') {
+        setTimeout(() => {
+          element.style.display = 'none';
+        }, 5000);
+      }
+    }
+
+    function hideStatus(elementId) {
+      const element = document.getElementById(elementId);
+      element.style.display = 'none';
+    }
+
+    // Utility: Update character counter
+    function updateCharCounter(inputId, counterId, maxLength) {
+      const input = document.getElementById(inputId);
+      const counter = document.getElementById(counterId);
+      
+      input.addEventListener('input', () => {
+        const length = input.value.length;
+        counter.textContent = `${length.toLocaleString()} character${length !== 1 ? 's' : ''}`;
+        
+        // Visual feedback when approaching limit
+        counter.classList.remove('warning', 'danger');
+        if (maxLength && length > maxLength * 0.9) {
+          counter.classList.add('danger');
+        } else if (maxLength && length > maxLength * 0.8) {
+          counter.classList.add('warning');
+        }
+      });
+    }
+
+    // Setup character counters
+    updateCharCounter('plaintext', 'plaintext-counter', 10000);
+    updateCharCounter('ciphertext', 'ciphertext-counter', 50000);
+
+    // Password visibility toggle
+    function setupPasswordToggle(inputId, toggleId) {
+      const input = document.getElementById(inputId);
+      const toggle = document.getElementById(toggleId);
+      
+      toggle.addEventListener('click', () => {
+        const isVisible = input.type === 'text';
+        input.type = isVisible ? 'password' : 'text';
+        toggle.setAttribute('aria-pressed', !isVisible);
+        toggle.querySelector('span').textContent = isVisible ? '👁' : '🙈';
+        toggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+      });
+    }
+
+    setupPasswordToggle('encrypt-password', 'encrypt-password-toggle');
+    setupPasswordToggle('decrypt-password', 'decrypt-password-toggle');
+    setupPasswordToggle('strength-password', 'strength-password-toggle');
+    setupPasswordToggle('duress-password', 'duress-password-toggle');
+
+    // Duress password toggle
+    const enableDuressCheckbox = document.getElementById('enable-duress');
+    const duressFields = document.getElementById('duress-fields');
+
+    enableDuressCheckbox.addEventListener('change', () => {
+      duressFields.style.display = enableDuressCheckbox.checked ? 'block' : 'none';
+      if (enableDuressCheckbox.checked) {
+        document.getElementById('duress-password').focus();
+      }
+    });
+
+    // Stealth mode toggle
+    const enableStealthCheckbox = document.getElementById('enable-stealth');
+    const stealthFields = document.getElementById('stealth-fields');
+
+    enableStealthCheckbox.addEventListener('change', () => {
+      stealthFields.style.display = enableStealthCheckbox.checked ? 'block' : 'none';
+    });
+
+    // Character counter for fake plaintext
+    updateCharCounter('fake-plaintext', 'fake-plaintext-counter', 10000);
+
+    // Encrypt functionality
+    document.getElementById('encrypt-btn').addEventListener('click', async () => {
+      if (!cryptoInitialized) {
+        showStatus('encrypt-status', 'Encryption library not ready. Please wait...', 'error');
+        return;
+      }
+
+      const plaintext = document.getElementById('plaintext').value.trim();
+      const password = document.getElementById('encrypt-password').value;
+      const output = document.getElementById('ciphertext-output');
+      const copyBtn = document.getElementById('copy-encrypt-btn');
+      const enableDuress = document.getElementById('enable-duress').checked;
+      const enableSelfDestruct = document.getElementById('enable-self-destruct').checked;
+      const enableStealth = document.getElementById('enable-stealth').checked;
+
+      hideStatus('encrypt-status');
+      output.classList.remove('success', 'error');
+
+      if (!plaintext) {
+        showStatus('encrypt-status', 'Please enter text to encrypt', 'error');
+        document.getElementById('plaintext').focus();
+        return;
+      }
+
+      if (!password) {
+        showStatus('encrypt-status', 'Please enter a password', 'error');
+        document.getElementById('encrypt-password').focus();
+        return;
+      }
+
+      if (password.length < 8) {
+        showStatus('encrypt-status', 'Password must be at least 8 characters long', 'error');
+        document.getElementById('encrypt-password').focus();
+        return;
+      }
+
+      // Validate duress password if enabled
+      let duressOptions = {};
+      if (enableDuress) {
+        const duressPassword = document.getElementById('duress-password').value;
+        const fakePlaintext = document.getElementById('fake-plaintext').value.trim();
+
+        if (!duressPassword) {
+          showStatus('encrypt-status', 'Please enter a duress password', 'error');
+          document.getElementById('duress-password').focus();
+          return;
+        }
+
+        if (duressPassword.length < 8) {
+          showStatus('encrypt-status', 'Duress password must be at least 8 characters long', 'error');
+          document.getElementById('duress-password').focus();
+          return;
+        }
+
+        if (duressPassword === password) {
+          showStatus('encrypt-status', 'Duress password must be different from primary password', 'error');
+          document.getElementById('duress-password').focus();
+          return;
+        }
+
+        if (!fakePlaintext) {
+          showStatus('encrypt-status', 'Please enter a fake message for duress mode', 'error');
+          document.getElementById('fake-plaintext').focus();
+          return;
+        }
+
+        duressOptions = { duressPassword, fakePlaintext };
+      }
+
+      // Add self-destruct option if enabled
+      if (enableSelfDestruct) {
+        duressOptions.selfDestruct = true;
+      }
+
+      // Add stealth mode options if enabled
+      if (enableStealth) {
+        const stealthModeType = document.getElementById('stealth-mode').value;
+        const stealthModeMap = {
+          'noise': 0x01,
+          'padding': 0x02,
+          'combined': 0x03
+        };
+        duressOptions.stealthMode = stealthModeMap[stealthModeType];
+      }
+
+      try {
+        const btn = document.getElementById('encrypt-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner"></span> Encrypting...';
+        btn.disabled = true;
+
+        const ciphertext = await encrypt(plaintext, password, duressOptions);
+
+        output.textContent = ciphertext;
+        output.classList.add('success');
+        copyBtn.disabled = false;
+
+        let successMsg = 'Message encrypted successfully!';
+        const features = [];
+        if (enableDuress) features.push('duress protection');
+        if (enableSelfDestruct) features.push('one-time mode');
+        if (enableStealth) features.push('stealth mode');
+        
+        if (features.length > 0) {
+          successMsg = `Message encrypted with ${features.join(', ')}!`;
+        }
+        showStatus('encrypt-status', successMsg, 'success');
+
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      } catch (error) {
+        console.error('Encryption error:', error);
+        output.textContent = '';
+        output.classList.add('error');
+        showStatus('encrypt-status', 'Encryption failed: ' + error.message, 'error');
+
+        const btn = document.getElementById('encrypt-btn');
+        btn.innerHTML = '<span aria-hidden="true">🔐</span> Encrypt Message';
+        btn.disabled = false;
+      }
+    });
+
+    // Decrypt functionality
+    document.getElementById('decrypt-btn').addEventListener('click', async () => {
+      if (!cryptoInitialized) {
+        showStatus('decrypt-status', 'Encryption library not ready. Please wait...', 'error');
+        return;
+      }
+
+      const ciphertext = document.getElementById('ciphertext').value.trim();
+      const password = document.getElementById('decrypt-password').value;
+      const output = document.getElementById('plaintext-output');
+      const copyBtn = document.getElementById('copy-decrypt-btn');
+      
+      hideStatus('decrypt-status');
+      output.classList.remove('success', 'error');
+      
+      if (!ciphertext) {
+        showStatus('decrypt-status', 'Please enter encrypted text', 'error');
+        document.getElementById('ciphertext').focus();
+        return;
+      }
+      
+      if (!password) {
+        showStatus('decrypt-status', 'Please enter the password', 'error');
+        document.getElementById('decrypt-password').focus();
+        return;
+      }
+      
+      try {
+        const btn = document.getElementById('decrypt-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner"></span> Decrypting...';
+        btn.disabled = true;
+        
+        const result = await decrypt(ciphertext, password);
+        
+        output.textContent = result.plaintext;
+        output.classList.add('success');
+        copyBtn.disabled = false;
+        
+        // Show self-destruct warning if enabled
+        if (result.selfDestruct) {
+          const warningDiv = document.createElement('div');
+          warningDiv.className = 'status-message error';
+          warningDiv.style.marginTop = '0.75rem';
+          warningDiv.innerHTML = '<span aria-hidden="true">⚠️</span> <strong>One-time message:</strong> This message is intended for single viewing. The sender has requested that you do not retain a copy.';
+          
+          const existingWarning = document.getElementById('self-destruct-warning');
+          if (existingWarning) {
+            existingWarning.remove();
+          }
+          warningDiv.id = 'self-destruct-warning';
+          
+          const decryptStatus = document.getElementById('decrypt-status');
+          decryptStatus.parentNode.insertBefore(warningDiv, decryptStatus.nextSibling);
+          
+          showStatus('decrypt-status', 'Message decrypted successfully!', 'success');
+        } else {
+          showStatus('decrypt-status', 'Message decrypted successfully!', 'success');
+        }
+        
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      } catch (error) {
+        console.error('Decryption error:', error);
+        output.textContent = '';
+        output.classList.add('error');
+        showStatus('decrypt-status', 'Decryption failed: ' + error.message, 'error');
+        
+        const btn = document.getElementById('decrypt-btn');
+        btn.innerHTML = '<span aria-hidden="true">🔓</span> Decrypt Message';
+        btn.disabled = false;
+      }
+    });
+
+    // Copy functionality
+    async function copyToClipboard(text, button) {
+      try {
+        await navigator.clipboard.writeText(text);
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span aria-hidden="true">✓</span> Copied!';
+        button.classList.add('btn-primary');
+        button.classList.remove('btn-secondary');
+        
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.classList.remove('btn-primary');
+          button.classList.add('btn-secondary');
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    }
+
+    document.getElementById('copy-encrypt-btn').addEventListener('click', function() {
+      const output = document.getElementById('ciphertext-output').textContent;
+      if (output) {
+        copyToClipboard(output, this);
+      }
+    });
+
+    document.getElementById('copy-decrypt-btn').addEventListener('click', function() {
+      const output = document.getElementById('plaintext-output').textContent;
+      if (output) {
+        copyToClipboard(output, this);
+      }
+    });
+
+    // Clear functionality
+    document.getElementById('clear-encrypt-btn').addEventListener('click', () => {
+      document.getElementById('plaintext').value = '';
+      document.getElementById('encrypt-password').value = '';
+      document.getElementById('ciphertext-output').textContent = '';
+      document.getElementById('ciphertext-output').classList.remove('success', 'error');
+      document.getElementById('copy-encrypt-btn').disabled = true;
+      document.getElementById('plaintext-counter').textContent = '0 characters';
+      document.getElementById('plaintext-counter').classList.remove('warning', 'danger');
+      document.getElementById('enable-self-destruct').checked = false;
+      document.getElementById('enable-stealth').checked = false;
+      document.getElementById('stealth-fields').style.display = 'none';
+      document.getElementById('enable-duress').checked = false;
+      document.getElementById('duress-fields').style.display = 'none';
+      hideStatus('encrypt-status');
+      document.getElementById('plaintext').focus();
+    });
+
+    document.getElementById('clear-decrypt-btn').addEventListener('click', () => {
+      document.getElementById('ciphertext').value = '';
+      document.getElementById('decrypt-password').value = '';
+      document.getElementById('plaintext-output').textContent = '';
+      document.getElementById('plaintext-output').classList.remove('success', 'error');
+      document.getElementById('copy-decrypt-btn').disabled = true;
+      document.getElementById('ciphertext-counter').textContent = '0 characters';
+      document.getElementById('ciphertext-counter').classList.remove('warning', 'danger');
+      const warning = document.getElementById('self-destruct-warning');
+      if (warning) {
+        warning.remove();
+      }
+      hideStatus('decrypt-status');
+      document.getElementById('ciphertext').focus();
+    });
+
+    const strengthPassword = document.getElementById('strength-password');
+    
+    initStrengthMeter(strengthPassword, {
+      bar: document.getElementById('strength-bar'),
+      label: document.getElementById('strength-label'),
+      crackTime: document.getElementById('crack-time'),
+      suggestions: document.getElementById('strength-suggestions'),
+      barContainer: document.getElementById('strength-bar-container')
+    });
+
+    // Prevent form submissions (forms are handled via JavaScript)
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+      });
+    });
+
+    // Footer links - prevent default behavior for placeholder links
+    document.querySelectorAll('.footer-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+      });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + Enter to encrypt/decrypt based on focus
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        const activeElement = document.activeElement;
+        if (activeElement.closest('#encrypt-form')) {
+          document.getElementById('encrypt-btn').click();
+        } else if (activeElement.closest('#decrypt-form')) {
+          document.getElementById('decrypt-btn').click();
+        }
+      }
+      
+      // Escape to clear current section
+      if (e.key === 'Escape') {
+        const activeElement = document.activeElement;
+        if (activeElement.closest('#encrypt-form')) {
+          document.getElementById('clear-encrypt-btn').click();
+        } else if (activeElement.closest('#decrypt-form')) {
+          document.getElementById('clear-decrypt-btn').click();
+        }
+      }
+    });
+
+    // ==========================================
+    // KEY MANAGER INTEGRATION
+    // ==========================================
+    
+    // Key manager module imports and initialization
+    let keyManagerModules = null;
+    let keyManagerState = {
+      isUnlocked: false,
+      keys: [],
+      selectedKeyId: null
+    };
+    let keyListController = null;
+
+    // Initialize key manager
+    async function initKeyManager() {
+      try {
+        // Dynamically import key manager modules
+        const storage = await import('./key-manager/storage.js');
+        const keyGenerator = await import('./key-manager/ui/key-generator.js');
+        const manualEntry = await import('./key-manager/ui/manual-entry.js');
+        const keyList = await import('./key-manager/ui/key-list.js');
+        const exportImport = await import('./key-manager/ui/export-import.js');
+        
+        keyManagerModules = {
+          initializeVault: storage.initializeVault,
+          unlockVault: storage.unlockVault,
+          lockVault: storage.lockVault,
+          isVaultUnlocked: storage.isVaultUnlocked,
+          addKey: storage.addKey,
+          getAllKeys: storage.getAllKeys,
+          getKey: storage.getKey,
+          deleteKey: storage.deleteKey,
+          updateKey: storage.updateKey,
+          exportVault: storage.exportVault,
+          importVault: storage.importVault,
+          mountKeyGenerator: keyGenerator.mountKeyGenerator,
+          mountManualEntry: manualEntry.mountManualEntry,
+          mountKeyList: keyList.mountKeyList,
+          mountExportImport: exportImport.mountExportImport
+        };
+        
+        // Check if vault exists
+        const hasVault = localStorage.getItem('encyphrix_key_vault') !== null;
+        
+        if (!hasVault) {
+          showMasterPasswordSetup();
+        } else {
+          showUnlockVault();
+        }
+      } catch (error) {
+        console.error('Failed to initialize key manager:', error);
+      }
+    }
+
+    // Show master password setup
+    function showMasterPasswordSetup() {
+      document.getElementById('master-password-setup').style.display = 'block';
+      document.getElementById('unlock-vault').style.display = 'none';
+      document.getElementById('key-manager-ui').style.display = 'none';
+    }
+
+    // Show unlock screen
+    function showUnlockVault() {
+      document.getElementById('master-password-setup').style.display = 'none';
+      document.getElementById('unlock-vault').style.display = 'block';
+      document.getElementById('key-manager-ui').style.display = 'none';
+    }
+
+    // Show key manager UI
+    function showKeyManagerUI() {
+      document.getElementById('master-password-setup').style.display = 'none';
+      document.getElementById('unlock-vault').style.display = 'none';
+      document.getElementById('key-manager-ui').style.display = 'block';
+      
+      // Mount UI components
+      keyManagerModules.mountKeyGenerator(document.getElementById('tab-generate'));
+      keyManagerModules.mountManualEntry(document.getElementById('tab-manual'));
+      
+      // Mount key list with callback for selection
+      keyListController = keyManagerModules.mountKeyList(document.getElementById('tab-list'), {
+        onSelect: (key) => {
+          keyManagerState.selectedKeyId = key.id;
+          updateKeySelectors();
+        }
+      });
+      
+      // Mount export/import
+      const masterPassword = document.getElementById('unlock-password').value || 
+                            document.getElementById('master-password').value;
+      keyManagerModules.mountExportImport(document.getElementById('tab-backup'), masterPassword);
+      
+      // Update key selectors in encrypt/decrypt
+      updateKeySelectors();
+    }
+
+    // Update key dropdowns
+    function updateKeySelectors() {
+      try {
+        const keys = keyManagerModules.getAllKeys();
+        const options = keys.map(k => `<option value="${k.id}">${escapeHtml(k.name)}</option>`).join('');
+        
+        const encryptSelect = document.getElementById('encrypt-key-select');
+        const decryptSelect = document.getElementById('decrypt-key-select');
+        
+        if (encryptSelect) {
+          const currentValue = encryptSelect.value;
+          encryptSelect.innerHTML = '<option value="">-- Select a saved key --</option>' + options;
+          encryptSelect.value = currentValue;
+        }
+        
+        if (decryptSelect) {
+          const currentValue = decryptSelect.value;
+          decryptSelect.innerHTML = '<option value="">-- Select a saved key --</option>' + options;
+          decryptSelect.value = currentValue;
+        }
+      } catch (error) {
+        // Vault might be locked
+        console.log('Vault locked, cannot update key selectors');
+      }
+    }
+
+    // Escape HTML special characters
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Handle key selection for encryption
+    function handleEncryptKeySelection() {
+      const keyId = document.getElementById('encrypt-key-select').value;
+      const passwordField = document.getElementById('encrypt-password');
+      
+      if (!keyId) {
+        passwordField.value = '';
+        return;
+      }
+      
+      try {
+        const key = keyManagerModules.getKey(keyId);
+        if (key && passwordField) {
+          passwordField.value = key.value;
+          keyManagerState.selectedKeyId = keyId;
+        }
+      } catch (error) {
+        console.error('Failed to get key:', error);
+      }
+    }
+
+    // Handle key selection for decryption
+    function handleDecryptKeySelection() {
+      const keyId = document.getElementById('decrypt-key-select').value;
+      const passwordField = document.getElementById('decrypt-password');
+      
+      if (!keyId) {
+        passwordField.value = '';
+        return;
+      }
+      
+      try {
+        const key = keyManagerModules.getKey(keyId);
+        if (key && passwordField) {
+          passwordField.value = key.value;
+          keyManagerState.selectedKeyId = keyId;
+        }
+      } catch (error) {
+        console.error('Failed to get key:', error);
+      }
+    }
+
+    // Toggle manual password entry for encrypt
+    function toggleManualPasswordEncrypt() {
+      const group = document.getElementById('manual-password-group-encrypt');
+      const isHidden = group.style.display === 'none';
+      group.style.display = isHidden ? 'block' : 'none';
+      
+      if (isHidden) {
+        document.getElementById('encrypt-password').focus();
+      }
+    }
+
+    // Toggle manual password entry for decrypt
+    function toggleManualPasswordDecrypt() {
+      const group = document.getElementById('manual-password-group-decrypt');
+      const isHidden = group.style.display === 'none';
+      group.style.display = isHidden ? 'block' : 'none';
+      
+      if (isHidden) {
+        document.getElementById('decrypt-password').focus();
+      }
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        
+        // Update active tab
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Show content
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.getElementById(`tab-${tab}`).style.display = 'block';
+        
+        // Refresh key list when switching to list tab
+        if (tab === 'list' && keyListController) {
+          keyListController.refresh();
+        }
+      });
+    });
+
+    // Event listeners for key manager
+    document.getElementById('create-vault-btn').addEventListener('click', async () => {
+      const password = document.getElementById('master-password').value;
+      const confirm = document.getElementById('master-password-confirm').value;
+      
+      if (password !== confirm) {
+        alert('Passwords do not match');
+        return;
+      }
+      
+      if (password.length < 8) {
+        alert('Master password must be at least 8 characters');
+        return;
+      }
+      
+      try {
+        await keyManagerModules.initializeVault(password);
+        showKeyManagerUI();
+      } catch (error) {
+        alert('Failed to create vault: ' + error.message);
+      }
+    });
+
+    document.getElementById('unlock-btn').addEventListener('click', async () => {
+      const password = document.getElementById('unlock-password').value;
+      
+      try {
+        await keyManagerModules.unlockVault(password);
+        showKeyManagerUI();
+      } catch (e) {
+        alert('Invalid master password');
+      }
+    });
+
+    document.getElementById('lock-vault-btn').addEventListener('click', () => {
+      keyManagerModules.lockVault();
+      // Clear key selectors
+      document.getElementById('encrypt-key-select').innerHTML = '<option value="">-- Select a saved key --</option>';
+      document.getElementById('decrypt-key-select').innerHTML = '<option value="">-- Select a saved key --</option>';
+      document.getElementById('encrypt-password').value = '';
+      document.getElementById('decrypt-password').value = '';
+      showUnlockVault();
+    });
+
+    // Key selector event listeners
+    document.getElementById('encrypt-key-select').addEventListener('change', handleEncryptKeySelection);
+    document.getElementById('decrypt-key-select').addEventListener('change', handleDecryptKeySelection);
+
+    // Manual password toggle buttons
+    document.getElementById('use-manual-password-encrypt').addEventListener('click', toggleManualPasswordEncrypt);
+    document.getElementById('use-manual-password-decrypt').addEventListener('click', toggleManualPasswordDecrypt);
+
+    // Initialize key manager on load
+    initKeyManager();
+  </script>
+</body>
+</html>

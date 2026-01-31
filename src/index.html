@@ -1167,22 +1167,14 @@
         <div id="key-manager-ui" style="display: none;">
           <div class="key-manager-tabs">
             <button class="tab-btn active" data-tab="generate">Generate Key</button>
-            <button class="tab-btn" data-tab="manual">Manual Entry</button>
             <button class="tab-btn" data-tab="list">My Keys</button>
-            <button class="tab-btn" data-tab="backup">Backup</button>
           </div>
 
           <div class="tab-content" id="tab-generate">
             <!-- Key Generator UI mounted here -->
           </div>
-          <div class="tab-content" id="tab-manual" style="display: none;">
-            <!-- Manual Entry UI mounted here -->
-          </div>
           <div class="tab-content" id="tab-list" style="display: none;">
             <!-- Key List UI mounted here -->
-          </div>
-          <div class="tab-content" id="tab-backup" style="display: none;">
-            <!-- Export/Import UI mounted here -->
           </div>
 
           <button id="lock-vault-btn" class="btn btn-secondary btn-full" style="margin-top: 1rem;">🔒 Lock Vault</button>
@@ -1213,35 +1205,26 @@
           </div>
 
           <div class="form-group">
-            <label for="encrypt-key-select" class="form-label">Select Key</label>
+            <label for="encrypt-key-select" class="form-label">Encryption Key</label>
             <select id="encrypt-key-select" class="form-input" style="cursor: pointer;">
-              <option value="">-- Select a saved key --</option>
+              <option value="">-- Select a key from vault --</option>
             </select>
-            <button id="use-manual-password-encrypt" type="button" class="btn btn-secondary" style="margin-top: 0.5rem; width: 100%;">Enter Password Manually</button>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
+              Generate keys in the Key Manager above. Keys are auto-generated as 6-word passphrases or 256-bit secure keys.
+            </p>
           </div>
 
-          <div id="manual-password-group-encrypt" class="form-group" style="display: none;">
-            <label for="encrypt-password" class="form-label">Password</label>
+          <div id="encrypt-password-field" class="form-group" style="display: none;">
+            <label for="encrypt-password" class="form-label">Key Value</label>
             <div class="password-wrapper">
               <input 
                 type="password" 
                 id="encrypt-password" 
                 class="form-input" 
-                placeholder="Enter a strong password..."
+                readonly
                 aria-describedby="encrypt-password-help"
-                autocomplete="off"
               >
-              <button 
-                type="button" 
-                class="password-toggle" 
-                id="encrypt-password-toggle"
-                aria-label="Toggle password visibility"
-                aria-pressed="false"
-              >
-                <span aria-hidden="true">👁</span>
-              </button>
             </div>
-            <span id="encrypt-password-help" class="visually-hidden">Choose a strong, unique password for encryption</span>
           </div>
 
           <div class="form-group">
@@ -1384,35 +1367,26 @@
           </div>
 
           <div class="form-group">
-            <label for="decrypt-key-select" class="form-label">Select Key</label>
+            <label for="decrypt-key-select" class="form-label">Decryption Key</label>
             <select id="decrypt-key-select" class="form-input" style="cursor: pointer;">
-              <option value="">-- Select a saved key --</option>
+              <option value="">-- Select a key from vault --</option>
             </select>
-            <button id="use-manual-password-decrypt" type="button" class="btn btn-secondary" style="margin-top: 0.5rem; width: 100%;">Enter Password Manually</button>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
+              Select the key that was used to encrypt this message. Keys are stored in your vault.
+            </p>
           </div>
 
-          <div id="manual-password-group-decrypt" class="form-group" style="display: none;">
-            <label for="decrypt-password" class="form-label">Password</label>
+          <div id="decrypt-password-field" class="form-group" style="display: none;">
+            <label for="decrypt-password" class="form-label">Key Value</label>
             <div class="password-wrapper">
               <input 
                 type="password" 
                 id="decrypt-password" 
                 class="form-input" 
-                placeholder="Enter the password..."
+                readonly
                 aria-describedby="decrypt-password-help"
-                autocomplete="off"
               >
-              <button 
-                type="button" 
-                class="password-toggle" 
-                id="decrypt-password-toggle"
-                aria-label="Toggle password visibility"
-                aria-pressed="false"
-              >
-                <span aria-hidden="true">👁</span>
-              </button>
             </div>
-            <span id="decrypt-password-help" class="visually-hidden">Enter the password used to encrypt this message</span>
           </div>
 
           <button type="button" class="btn btn-primary btn-full" id="decrypt-btn">
@@ -1437,48 +1411,7 @@
         </form>
       </section>
 
-      <!-- Password Strength Section -->
-      <section class="card strength-section" aria-labelledby="strength-heading">
-        <div class="card-header">
-          <div class="card-icon" aria-hidden="true">🛡️</div>
-          <h2 id="strength-heading" class="card-title">Password Strength Analyzer</h2>
-        </div>
 
-        <div class="form-group">
-          <label for="strength-password" class="form-label">Test Password Strength</label>
-          <div class="password-wrapper">
-            <input 
-              type="password" 
-              id="strength-password" 
-              class="form-input" 
-              placeholder="Type a password to analyze..."
-              aria-describedby="strength-help"
-              autocomplete="off"
-            >
-            <button 
-              type="button" 
-              class="password-toggle" 
-              id="strength-password-toggle"
-              aria-label="Toggle password visibility"
-              aria-pressed="false"
-            >
-              <span aria-hidden="true">👁</span>
-            </button>
-          </div>
-          <span id="strength-help" class="visually-hidden">Enter a password to see real-time strength analysis</span>
-
-          <div class="strength-meter">
-            <div class="strength-bar-container" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-label="Password strength" id="strength-bar-container">
-              <div class="strength-bar" id="strength-bar"></div>
-            </div>
-            <div class="strength-info">
-              <span class="strength-label" id="strength-label">Enter a password</span>
-              <span class="crack-time" id="crack-time"></span>
-            </div>
-            <div class="strength-suggestions" id="strength-suggestions" role="list"></div>
-          </div>
-        </div>
-      </section>
     </div>
   </main>
 
@@ -1496,7 +1429,6 @@
   <script src="./lib/zxcvbn.js"></script>
   <script type="module">
     import { initCrypto, encrypt, decrypt } from './crypto.js';
-    import { initStrengthMeter } from './password-strength.js';
 
     // Initialize crypto on page load
     let cryptoInitialized = false;
@@ -1572,9 +1504,6 @@
       });
     }
 
-    setupPasswordToggle('encrypt-password', 'encrypt-password-toggle');
-    setupPasswordToggle('decrypt-password', 'decrypt-password-toggle');
-    setupPasswordToggle('strength-password', 'strength-password-toggle');
     setupPasswordToggle('duress-password', 'duress-password-toggle');
 
     // Duress password toggle
@@ -1856,16 +1785,6 @@
       document.getElementById('ciphertext').focus();
     });
 
-    const strengthPassword = document.getElementById('strength-password');
-    
-    initStrengthMeter(strengthPassword, {
-      bar: document.getElementById('strength-bar'),
-      label: document.getElementById('strength-label'),
-      crackTime: document.getElementById('crack-time'),
-      suggestions: document.getElementById('strength-suggestions'),
-      barContainer: document.getElementById('strength-bar-container')
-    });
-
     // Prevent form submissions (forms are handled via JavaScript)
     document.querySelectorAll('form').forEach(form => {
       form.addEventListener('submit', (e) => {
@@ -1979,8 +1898,6 @@
       
       // Mount UI components
       keyManagerModules.mountKeyGenerator(document.getElementById('tab-generate'));
-      keyManagerModules.mountManualEntry(document.getElementById('tab-manual'));
-      
       // Mount key list with callback for selection
       keyListController = keyManagerModules.mountKeyList(document.getElementById('tab-list'), {
         onSelect: (key) => {
@@ -1988,11 +1905,6 @@
           updateKeySelectors();
         }
       });
-      
-      // Mount export/import
-      const masterPassword = document.getElementById('unlock-password').value || 
-                            document.getElementById('master-password').value;
-      keyManagerModules.mountExportImport(document.getElementById('tab-backup'), masterPassword);
       
       // Update key selectors in encrypt/decrypt
       updateKeySelectors();
@@ -2009,13 +1921,13 @@
         
         if (encryptSelect) {
           const currentValue = encryptSelect.value;
-          encryptSelect.innerHTML = '<option value="">-- Select a saved key --</option>' + options;
+          encryptSelect.innerHTML = '<option value="">-- Select a key from vault --</option>' + options;
           encryptSelect.value = currentValue;
         }
         
         if (decryptSelect) {
           const currentValue = decryptSelect.value;
-          decryptSelect.innerHTML = '<option value="">-- Select a saved key --</option>' + options;
+          decryptSelect.innerHTML = '<option value="">-- Select a key from vault --</option>' + options;
           decryptSelect.value = currentValue;
         }
       } catch (error) {
@@ -2077,28 +1989,6 @@
       }
     }
 
-    // Toggle manual password entry for encrypt
-    function toggleManualPasswordEncrypt() {
-      const group = document.getElementById('manual-password-group-encrypt');
-      const isHidden = group.style.display === 'none';
-      group.style.display = isHidden ? 'block' : 'none';
-      
-      if (isHidden) {
-        document.getElementById('encrypt-password').focus();
-      }
-    }
-
-    // Toggle manual password entry for decrypt
-    function toggleManualPasswordDecrypt() {
-      const group = document.getElementById('manual-password-group-decrypt');
-      const isHidden = group.style.display === 'none';
-      group.style.display = isHidden ? 'block' : 'none';
-      
-      if (isHidden) {
-        document.getElementById('decrypt-password').focus();
-      }
-    }
-
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -2156,8 +2046,8 @@
     document.getElementById('lock-vault-btn').addEventListener('click', () => {
       keyManagerModules.lockVault();
       // Clear key selectors
-      document.getElementById('encrypt-key-select').innerHTML = '<option value="">-- Select a saved key --</option>';
-      document.getElementById('decrypt-key-select').innerHTML = '<option value="">-- Select a saved key --</option>';
+      document.getElementById('encrypt-key-select').innerHTML = '<option value="">-- Select a key from vault --</option>';
+      document.getElementById('decrypt-key-select').innerHTML = '<option value="">-- Select a key from vault --</option>';
       document.getElementById('encrypt-password').value = '';
       document.getElementById('decrypt-password').value = '';
       showUnlockVault();
@@ -2166,10 +2056,6 @@
     // Key selector event listeners
     document.getElementById('encrypt-key-select').addEventListener('change', handleEncryptKeySelection);
     document.getElementById('decrypt-key-select').addEventListener('change', handleDecryptKeySelection);
-
-    // Manual password toggle buttons
-    document.getElementById('use-manual-password-encrypt').addEventListener('click', toggleManualPasswordEncrypt);
-    document.getElementById('use-manual-password-decrypt').addEventListener('click', toggleManualPasswordDecrypt);
 
     // Initialize key manager on load
     initKeyManager();

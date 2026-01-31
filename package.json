@@ -1,0 +1,56 @@
+{
+  "name": "encyphrix",
+  "version": "0.1.0",
+  "description": "Paranoid-grade encryption web app. Client-side only. No servers. No tracking.",
+  "type": "module",
+  "scripts": {
+    "test": "bun test ./src/__tests__/",
+    "test:unit": "bun test ./src/__tests__/",
+    "test:e2e": "bunx playwright test ./e2e/",
+    "test:watch": "bun test --watch",
+    "test:e2e": "playwright test e2e/",
+    "serve": "python3 -m http.server 3000 --directory src || python -m http.server 3000 --directory src",
+    "build": "./scripts/build.sh",
+    "build:verify": "./scripts/build.sh && ./dist/verify-build.sh",
+    "build:test-reproducibility": "./dist/test-reproducibility.sh"
+  },
+  "dependencies": {
+    "libsodium-wrappers": "0.7.16",
+    "libsodium-wrappers-sumo": "0.8.2",
+    "zxcvbn": "4.4.2"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "^20.4.0",
+    "@playwright/test": "1.58.0",
+    "@types/bun": "1.3.8",
+    "@types/libsodium-wrappers": "0.7.14",
+    "bun-types": "1.3.8"
+  },
+  "peerDependencies": {
+    "typescript": "5.9.3"
+  },
+  "overrides": {
+    "libsodium": "0.7.16",
+    "libsodium-sumo": "0.8.2",
+    "playwright": "1.58.0",
+    "playwright-core": "1.58.0",
+    "fsevents": "2.3.2",
+    "@types/node": "25.1.0",
+    "undici-types": "7.16.0"
+  },
+  "keywords": [
+    "encryption",
+    "cryptography",
+    "privacy",
+    "security",
+    "argon2",
+    "aes-gcm",
+    "client-side",
+    "offline"
+  ],
+  "author": "Encyphrix Team",
+  "license": "MIT",
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}

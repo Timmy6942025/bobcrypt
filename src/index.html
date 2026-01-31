@@ -1288,12 +1288,10 @@
             <div class="form-group">
               <label for="stealth-mode" class="form-label">Stealth Mode Type</label>
               <select id="stealth-mode" class="form-input" style="cursor: pointer;">
-                <option value="noise">Random Noise (hides structure)</option>
                 <option value="padding">Padding (hides message length)</option>
-                <option value="combined">Combined (maximum obfuscation)</option>
               </select>
               <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
-                <strong>Noise:</strong> Prepends random bytes • <strong>Padding:</strong> Fixed-size output • <strong>Combined:</strong> Both
+                <strong>Padding:</strong> Pads to fixed block size, hiding actual message length. Different messages produce same-size output.
               </p>
             </div>
           </div>
@@ -1675,15 +1673,9 @@
         duressOptions.selfDestruct = true;
       }
 
-      // Add stealth mode options if enabled
+      // Add stealth mode options if enabled (only padding mode is fully supported)
       if (enableStealth) {
-        const stealthModeType = document.getElementById('stealth-mode').value;
-        const stealthModeMap = {
-          'noise': 0x01,
-          'padding': 0x02,
-          'combined': 0x03
-        };
-        duressOptions.stealthMode = stealthModeMap[stealthModeType];
+        duressOptions.stealthMode = 0x02; // STEALTH_PADDING
       }
 
       try {

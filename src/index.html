@@ -1227,6 +1227,21 @@
             </div>
           </div>
 
+          <div class="form-group strength-section">
+            <label class="form-label">Password Strength</label>
+            <input type="password" id="strength-password" class="form-input" placeholder="Test password strength..." style="margin-bottom: 0.5rem;" />
+            <div class="strength-meter" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" id="strength-bar-container">
+              <div class="strength-bar-container">
+                <div class="strength-bar" id="strength-bar"></div>
+              </div>
+              <div class="strength-info">
+                <span class="strength-label" id="strength-label">Enter a password</span>
+                <span class="crack-time" id="crack-time"></span>
+              </div>
+            </div>
+            <div class="strength-suggestions" id="strength-suggestions" role="list"></div>
+          </div>
+
           <div class="form-group">
             <label class="form-label checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; text-transform: none; font-weight: normal; letter-spacing: normal;">
               <input 
@@ -1429,6 +1444,7 @@
   <script src="./lib/zxcvbn.js" integrity="sha384-LXuP8lknSGBOLVn4fwVOl+rWR+zOEtZx6CF9ZLaN6gKBgLByU4D79VWWjV4/gefq" crossorigin="anonymous"></script>
   <script type="module">
     import { initCrypto, encrypt, decrypt } from './crypto.js';
+    import { initStrengthMeter } from './password-strength.js';
 
     // Debug mode - set to false in production
     const DEBUG = false;
@@ -2190,6 +2206,18 @@
 
     // Initialize key manager on load
     initKeyManager();
+    
+    // Initialize password strength meter
+    const strengthPasswordInput = document.getElementById('strength-password');
+    if (strengthPasswordInput && typeof initStrengthMeter === 'function') {
+      initStrengthMeter(strengthPasswordInput, {
+        bar: document.getElementById('strength-bar'),
+        label: document.getElementById('strength-label'),
+        crackTime: document.getElementById('crack-time'),
+        suggestions: document.getElementById('strength-suggestions'),
+        barContainer: document.getElementById('strength-bar-container')
+      });
+    }
   </script>
 </body>
 </html>

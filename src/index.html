@@ -2066,6 +2066,20 @@
       document.addEventListener(event, resetAutoLockTimer, { passive: true });
     });
 
+    // Auto-lock when tab becomes hidden (user switches tabs)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && keyManagerModules && keyManagerModules.isVaultUnlocked && keyManagerModules.isVaultUnlocked()) {
+        keyManagerModules.lockVault();
+      }
+    });
+
+    // Auto-lock when page is about to unload (browser close/refresh)
+    window.addEventListener('beforeunload', () => {
+      if (keyManagerModules && keyManagerModules.isVaultUnlocked && keyManagerModules.isVaultUnlocked()) {
+        keyManagerModules.lockVault();
+      }
+    });
+
     // Handle key selection for encryption
     function handleEncryptKeySelection() {
       const keyId = document.getElementById('encrypt-key-select').value;

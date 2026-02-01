@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
 import { initCrypto, encrypt, decrypt, deriveKey, generateSalt } from '../crypto.js';
 
+const DEBUG = process.env.DEBUG_TESTS === 'true';
+
 describe('Performance Tests', () => {
   beforeAll(async () => {
     if (typeof window === 'undefined' || !window.crypto?.subtle?.importKey) {

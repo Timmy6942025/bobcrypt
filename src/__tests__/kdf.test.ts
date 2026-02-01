@@ -131,7 +131,10 @@ describe('Argon2id Key Derivation Function', () => {
       const endTime = performance.now();
       
       const duration = endTime - startTime;
-      console.log(`Argon2id KDF duration: ${duration.toFixed(2)}ms`);
+      // Timing info logged only in DEBUG mode to prevent side-channel leakage
+      if (process.env.DEBUG_TESTS) {
+        console.log(`Argon2id KDF duration: ${duration.toFixed(2)}ms`);
+      }
       
       expect(duration).toBeLessThan(2000);
     });

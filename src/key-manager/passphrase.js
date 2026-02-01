@@ -16,11 +16,23 @@ import { getSodium } from '../crypto.js';
 export async function generatePassphrase(wordCount = 6) {
   const sodium = getSodium();
   const words = [];
-  const maxIndex = getWordCount() - 1;
+  const maxIndex = getWordCount();
+  
+  // Use rejection sampling to eliminate modulo bias
+  // This ensures uniform distribution across all words
+  const getUnbiasedIndex = () => {
+    const randomBytes = sodium.randombytes_buf(4);
+    const index = new DataView(randomBytes.buffer).getUint32(0, false);
+    // Reject values that would cause bias (values in the top range)
+    const minValid = (2 ** 32) % maxIndex;
+    if (index < minValid) {
+      return getUnbiasedIndex(); // Recurse for rejected values
+    }
+    return index % maxIndex;
+  };
   
   for (let i = 0; i < wordCount; i++) {
-    const randomBytes = sodium.randombytes_buf(4); // 32 bits
-    const index = new DataView(randomBytes.buffer).getUint32(0, false) % maxIndex;
+    const index = getUnbiasedIndex();
     words.push(await getWordByIndex(index));
   }
   

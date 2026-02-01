@@ -574,16 +574,15 @@ export async function decrypt(ciphertext, password) {
     return { plaintext, selfDestruct };
   } catch (error) {
     // Full data decryption failed - might be duress-enabled ciphertext
-    // Try with progressively smaller portions to find primary ciphertext boundary
+    // SECURITY: Try a single expected truncation point to avoid timing side-channels
+    // The iterative approach (trying multiple sizes) creates timing leaks
     const MIN_DURESS_SIZE = NONCE_SIZE + AUTH_TAG_SIZE; // 28 bytes minimum for duress
     
-    // Try different truncation points for primary ciphertext
-    // Start from encryptedData.length - MIN_DURESS_SIZE and work down to minimum valid size
-    const minPrimarySize = AUTH_TAG_SIZE; // At least auth tag
-    const maxPrimarySize = encryptedData.length - MIN_DURESS_SIZE;
-    
-    for (let primarySize = maxPrimarySize; primarySize >= minPrimarySize; primarySize--) {
-      const primaryData = encryptedData.slice(0, primarySize);
+    // Try one expected primary ciphertext size (encryptedData - duress overhead)
+    // This assumes standard duress format: [primary][duress_nonce][duress_ciphertext]
+    if (encryptedData.length > MIN_DURESS_SIZE) {
+      const expectedPrimarySize = encryptedData.length - MIN_DURESS_SIZE;
+      const primaryData = encryptedData.slice(0, expectedPrimarySize);
       
       try {
         const decryptedBuffer = await getCryptoSubtle().decrypt(
@@ -596,12 +595,11 @@ export async function decrypt(ciphertext, password) {
         const plaintext = new TextDecoder().decode(decryptedBuffer);
         return { plaintext, selfDestruct };
       } catch (primaryError) {
-        // This truncation didn't work, try the next one
-        continue;
+        // Expected size failed - continue to duress attempt
       }
     }
     
-    // Primary decryption failed at all truncation points - try duress
+    // Primary decryption failed - try duress
     if (encryptedData.length > MIN_DURESS_SIZE) {
       try {
         const duressPlaintext = await tryDuressDecrypt(encryptedData, password, salt);

@@ -255,7 +255,6 @@ describe('Master Password Encryption', () => {
       const endTime = performance.now();
       
       const duration = endTime - startTime;
-      console.log(`Argon2id (256 MiB, 3 iter) duration: ${duration.toFixed(2)}ms`);
       
       expect(duration).toBeLessThan(3000);
     });

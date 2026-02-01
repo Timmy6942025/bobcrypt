@@ -1781,11 +1781,23 @@
           return;
         }
         
+        // SECURITY WARNING: Clipboard data may persist in system history
+        // and sync to cloud services. Users should clear clipboard after use.
         await navigator.clipboard.writeText(text);
         const originalText = button.innerHTML;
         button.innerHTML = '<span aria-hidden="true">✓</span> Copied!';
         button.classList.add('btn-primary');
         button.classList.remove('btn-secondary');
+        
+        // Auto-clear clipboard after 30 seconds for security
+        setTimeout(async () => {
+          try {
+            // Clear by writing empty string (best effort)
+            await navigator.clipboard.writeText('');
+          } catch (e) {
+            // Ignore errors during auto-clear
+          }
+        }, 30000);
         
         setTimeout(() => {
           button.innerHTML = originalText;

@@ -324,11 +324,13 @@ export async function encrypt(plaintext, password, options = {}) {
     ['encrypt', 'decrypt']    // key usages
   );
 
-  // Step 5: Encrypt using AES-256-GCM
+  // Step 5: Encrypt using AES-256-GCM with AAD for context binding
+  const AAD_DATA = new TextEncoder().encode('encyphrix-v1');
   const algorithm = {
     name: 'AES-GCM',
     iv: nonce,
-    tagLength: 128
+    tagLength: 128,
+    additionalData: AAD_DATA
   };
 
   const plaintextBytes = new TextEncoder().encode(plaintext);
@@ -554,11 +556,13 @@ export async function decrypt(ciphertext, password) {
     ['encrypt', 'decrypt']
   );
 
-  // Step 5: Try decrypt using AES-256-GCM with primary key
+  // Step 5: Try decrypt using AES-256-GCM with AAD
+  const AAD_DATA = new TextEncoder().encode('encyphrix-v1');
   const algorithm = {
     name: 'AES-GCM',
     iv: nonce,
-    tagLength: 128
+    tagLength: 128,
+    additionalData: AAD_DATA
   };
 
   // Try decrypting with the full data first (no duress case)

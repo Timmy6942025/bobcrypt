@@ -116,6 +116,15 @@ export function serialize(metadata, encryptedData) {
     throw new Error(`Nonce must be exactly ${NONCE_SIZE} bytes, got ${metadata.nonce?.length || 0}`);
   }
   
+  // Validate KDF parameters are within acceptable ranges
+  if (metadata.opslimit < 3 || metadata.opslimit > 10) {
+    throw new Error(`Invalid opslimit: ${metadata.opslimit}. Must be between 3 and 10.`);
+  }
+  
+  if (metadata.memlimit < 65536 || metadata.memlimit > 1048576) {
+    throw new Error(`Invalid memlimit: ${metadata.memlimit}. Must be between 64MB and 1GB.`);
+  }
+  
   if (!encryptedData || encryptedData.length === 0) {
     throw new Error('Encrypted data is required');
   }

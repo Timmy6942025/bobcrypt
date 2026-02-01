@@ -240,7 +240,7 @@ while IFS= read -r entry; do
         echo "   Actual:   $actual_sha256"
         ((failed++))
     fi
-done < <(jq -c 'to_entries | .[]' "$MANIFEST_FILE" | jq -c '.value.files // {} | to_entries | .[]')
+done < <(jq -c '.files | to_entries | .[]' "$MANIFEST_FILE")
 
 echo ""
 echo "================================"

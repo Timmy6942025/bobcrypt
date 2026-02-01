@@ -105,7 +105,11 @@ export function initExportImport(container = document, masterPassword = '') {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `encyphrix-vault-${new Date().toISOString().split('T')[0]}.encyphrix-vault`;
+    // Use random filename to avoid information leakage
+    const randomSuffix = crypto.getRandomValues(new Uint8Array(4))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    a.download = `vault-${randomSuffix}.enc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -116,6 +120,18 @@ export function initExportImport(container = document, masterPassword = '') {
   importFileInput?.addEventListener('change', (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File too large. Maximum size is 10MB.');
+      return;
+    }
+
+    // Validate file type (accept text files only)
+    if (!file.type.match(/^text\/.*/) && !file.name.endsWith('.enc') && !file.name.endsWith('.txt')) {
+      alert('Invalid file type. Please select a text file or .enc file.');
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -138,10 +154,18 @@ export function initExportImport(container = document, masterPassword = '') {
       return;
     }
 
+    // Backup current vault before importing (if one exists)
+    let backupData = null;
+    try {
+      backupData = exportVault();
+    } catch (e) {
+      // No existing vault to backup
+    }
+
     // Show confirmation dialog
     const confirmed = confirm(
       '⚠️ WARNING: This will REPLACE your current vault!\n\n' +
-      'Make sure you have backed up your current vault if needed.\n\n' +
+      (backupData ? 'A backup of your current vault has been prepared.\n' : '') +
       'Do you want to continue?'
     );
 

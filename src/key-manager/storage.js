@@ -10,6 +10,11 @@ const VAULT_KEY = 'encyphrix_key_vault';
 let decryptedVault = null;
 let vaultKey = null;
 
+// Rate limiting for unlock attempts
+const unlockAttempts = new Map();
+const MAX_UNLOCK_ATTEMPTS = 5;
+const UNLOCK_LOCKOUT_DURATION = 30000; // 30 seconds
+
 /**
  * Generate a unique ID for keys using cryptographically secure randomness
  * @returns {string} Unique key ID
@@ -157,6 +162,36 @@ export async function initializeVault(masterPassword) {
 }
 
 /**
+ * Check if unlock is rate limited
+ * @returns {boolean} True if currently rate limited
+ */
+function isUnlockRateLimited() {
+  const now = Date.now();
+  const attempts = unlockAttempts.get('vault') || [];
+  
+  // Clean up old attempts
+  const recentAttempts = attempts.filter(time => now - time < UNLOCK_LOCKOUT_DURATION);
+  unlockAttempts.set('vault', recentAttempts);
+  
+  // Check if too many recent attempts
+  if (recentAttempts.length >= MAX_UNLOCK_ATTEMPTS) {
+    const oldestAttempt = recentAttempts[0];
+    const timeRemaining = UNLOCK_LOCKOUT_DURATION - (now - oldestAttempt);
+    throw new Error(`Too many failed attempts. Please wait ${Math.ceil(timeRemaining / 1000)} seconds.`);
+  }
+}
+
+/**
+ * Record a failed unlock attempt
+ */
+function recordUnlockFailure() {
+  const now = Date.now();
+  const attempts = unlockAttempts.get('vault') || [];
+  attempts.push(now);
+  unlockAttempts.set('vault', attempts);
+}
+
+/**
  * Unlock the vault with master password
  * @param {string} masterPassword - Master password
  * @returns {Promise<void>}
@@ -166,10 +201,21 @@ export async function unlockVault(masterPassword) {
   if (!vaultExists()) {
     throw new Error('Vault does not exist. Use initializeVault to create one.');
   }
+  
+  // Check rate limiting
+  isUnlockRateLimited();
 
-  const encrypted = localStorage.getItem(VAULT_KEY);
-  decryptedVault = await decryptVault(encrypted, masterPassword);
-  vaultKey = masterPassword;
+  try {
+    const encrypted = localStorage.getItem(VAULT_KEY);
+    decryptedVault = await decryptVault(encrypted, masterPassword);
+    vaultKey = masterPassword;
+    // Clear failed attempts on success
+    unlockAttempts.delete('vault');
+  } catch (error) {
+    // Record failed attempt
+    recordUnlockFailure();
+    throw error;
+  }
 }
 
 /**

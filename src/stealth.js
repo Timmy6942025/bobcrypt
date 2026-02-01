@@ -70,6 +70,20 @@ function getRandomInt(min, max) {
 }
 
 /**
+ * Derive a secondary salt for noise offset calculation
+ * This prevents salt reuse between main KDF and noise offset derivation
+ * @param {Uint8Array} primarySalt - The original 16-byte salt
+ * @returns {Uint8Array} A derived 16-byte secondary salt
+ */
+function deriveNoiseSalt(primarySalt) {
+  const noiseSalt = new Uint8Array(16);
+  for (let i = 0; i < 16; i++) {
+    noiseSalt[i] = primarySalt[i] ^ 0x5C; // XOR with fixed pattern to derive secondary salt
+  }
+  return noiseSalt;
+}
+
+/**
  * Derive the noise offset from password and salt
  * This ensures only someone with the correct password can find the real ciphertext
  * @param {string} password - The password to derive offset from
@@ -81,7 +95,8 @@ function getRandomInt(min, max) {
  */
 export function deriveNoiseOffset(password, salt, minOffset, maxOffset, kdfFn) {
   const offsetPassword = password + '_STEALTH_NOISE_OFFSET_v1';
-  const offsetKey = kdfFn(offsetPassword, salt);
+  const noiseSalt = deriveNoiseSalt(salt);
+  const offsetKey = kdfFn(offsetPassword, noiseSalt);
   const view = new DataView(offsetKey.buffer, offsetKey.byteOffset, 4);
   const offsetValue = view.getUint32(0, false);
   const range = maxOffset - minOffset + 1;

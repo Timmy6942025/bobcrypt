@@ -1,13 +1,3 @@
-// Debug mode flag
-const DEBUG_MODE_ENABLED = false;
-
-function logError(...args) {
-  if (DEBUG_MODE_ENABLED) {
-    console.error(...args);
-  }
-}
-
-
 /**
  * Export/Import UI Component
  * Provides interface for backing up and restoring encrypted vault
@@ -102,7 +92,6 @@ export function initExportImport(container = document, masterPassword = '') {
         copyExportBtn.classList.remove('copied');
       }, 2000);
     } catch (err) {
-      logError('Failed to copy:', err);
       alert('Failed to copy to clipboard');
     }
   });

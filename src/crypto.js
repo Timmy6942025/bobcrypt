@@ -360,13 +360,14 @@ export async function encrypt(plaintext, password, options = {}) {
     // Generate new nonce for duress encryption
     const duressNonce = generateNonce();
 
-    // Encrypt fake plaintext
+    // Encrypt fake plaintext with AAD
     const fakePlaintextBytes = new TextEncoder().encode(fakePlaintext);
     const duressEncryptedBuffer = await getCryptoSubtle().encrypt(
       {
         name: 'AES-GCM',
         iv: duressNonce,
-        tagLength: 128
+        tagLength: 128,
+        additionalData: AAD_DATA
       },
       duressCryptoKey,
       fakePlaintextBytes

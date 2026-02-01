@@ -1,13 +1,3 @@
-// Debug mode flag
-const DEBUG_MODE_ENABLED = false;
-
-function logError(...args) {
-  if (DEBUG_MODE_ENABLED) {
-    console.error(...args);
-  }
-}
-
-
 /**
  * Key Generator UI Component
  * Provides interface for generating 6-word passphrases and 256-bit keys
@@ -147,7 +137,7 @@ export async function initKeyGenerator(container = document) {
         copyBtn.classList.remove('copied');
       }, 2000);
     } catch (err) {
-      logError('Failed to copy:', err);
+      // Copy failed - button will show error state
     }
   });
 
@@ -184,7 +174,6 @@ export async function initKeyGenerator(container = document) {
       setDefaultKeyName();
       generateKey();
     } catch (error) {
-      logError('Failed to save key:', error);
       alert('Failed to save key: ' + error.message);
     }
   });

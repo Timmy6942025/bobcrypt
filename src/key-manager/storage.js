@@ -25,6 +25,8 @@ function generateKeyId() {
 
 /**
  * Derive encryption key from master password using PBKDF2
+ * SECURITY NOTE: Using PBKDF2 with 600k iterations per OWASP 2023 recommendations.
+ * Future versions should migrate to Argon2id for consistency with crypto.js.
  * @param {string} password - Master password
  * @param {Uint8Array} salt - Salt for key derivation
  * @returns {Promise<CryptoKey>} Derived encryption key
@@ -45,8 +47,8 @@ async function deriveKey(password, salt) {
     {
       name: 'PBKDF2',
       salt: salt,
-      iterations: 100000,
-      hash: 'SHA-256'
+      iterations: 600000,
+      hash: 'SHA-512'
     },
     baseKey,
     { name: 'AES-GCM', length: 256 },

@@ -2016,17 +2016,6 @@
         logDebug('Vault locked, cannot update key selectors');
       }
     }
-        
-        if (decryptSelect) {
-          const currentValue = decryptSelect.value;
-          decryptSelect.innerHTML = '<option value="">-- Select a key from vault --</option>' + options;
-          decryptSelect.value = currentValue;
-        }
-      } catch (error) {
-        // Vault might be locked
-        console.log('Vault locked, cannot update key selectors');
-      }
-    }
 
     // Escape HTML special characters
     function escapeHtml(text) {

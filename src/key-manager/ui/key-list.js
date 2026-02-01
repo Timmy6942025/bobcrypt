@@ -6,6 +6,20 @@
 
 import { getAllKeys, deleteKey, updateKey, getKey } from '../storage.js';
 
+const DEBUG_MODE_ENABLED = false;
+
+function logDebug(...args) {
+  if (DEBUG_MODE_ENABLED) {
+    console.log(...args);
+  }
+}
+
+function logError(...args) {
+  if (DEBUG_MODE_ENABLED) {
+    logError(...args);
+  }
+}
+
 /**
  * CSS class names for styling (matches the Cyber-Security Noir aesthetic)
  */
@@ -269,7 +283,7 @@ export async function refreshKeyList(selectedKeyId = null) {
       container.innerHTML = renderKeyList(keys, selectedKeyId);
     }
   } catch (error) {
-    console.error('Failed to refresh key list:', error);
+    logError('Failed to refresh key list:', error);
     // Vault might be locked - show empty state
     toggleEmptyState(true);
     updateKeyCount(0);
@@ -329,7 +343,7 @@ export function initKeyList(options = {}) {
     try {
       const key = getKey(keyId);
       if (!key) {
-        console.error('Key not found:', keyId);
+        logError('Key not found:', keyId);
         return;
       }
       
@@ -364,7 +378,7 @@ export function initKeyList(options = {}) {
       await updateKey(keyId, { lastUsed: new Date().toISOString() });
       
     } catch (error) {
-      console.error('Failed to select key:', error);
+      logError('Failed to select key:', error);
     }
   }
   
@@ -376,7 +390,7 @@ export function initKeyList(options = {}) {
     try {
       const key = getKey(keyId);
       if (!key) {
-        console.error('Key not found:', keyId);
+        logError('Key not found:', keyId);
         return;
       }
       
@@ -407,7 +421,7 @@ export function initKeyList(options = {}) {
         }
       }
     } catch (error) {
-      console.error('Failed to rename key:', error);
+      logError('Failed to rename key:', error);
       alert('Failed to rename key: ' + error.message);
     }
   }
@@ -420,7 +434,7 @@ export function initKeyList(options = {}) {
     try {
       const key = getKey(keyId);
       if (!key) {
-        console.error('Key not found:', keyId);
+        logError('Key not found:', keyId);
         return;
       }
       
@@ -460,7 +474,7 @@ export function initKeyList(options = {}) {
         }
       }
     } catch (error) {
-      console.error('Failed to delete key:', error);
+      logError('Failed to delete key:', error);
       alert('Failed to delete key: ' + error.message);
     }
   }

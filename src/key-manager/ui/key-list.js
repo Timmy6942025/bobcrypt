@@ -328,7 +328,6 @@ export function initKeyList(options = {}) {
     try {
       const key = getKey(keyId);
       if (!key) {
-        logError('Key not found:', keyId);
         return;
       }
       
@@ -375,7 +374,6 @@ export function initKeyList(options = {}) {
     try {
       const key = getKey(keyId);
       if (!key) {
-        logError('Key not found:', keyId);
         return;
       }
       
@@ -406,7 +404,6 @@ export function initKeyList(options = {}) {
         }
       }
     } catch (error) {
-      logError('Failed to rename key:', error);
       alert('Failed to rename key: ' + error.message);
     }
   }
@@ -419,7 +416,6 @@ export function initKeyList(options = {}) {
     try {
       const key = getKey(keyId);
       if (!key) {
-        logError('Key not found:', keyId);
         return;
       }
       

@@ -105,8 +105,13 @@ generate_hashes() {
     local sri_hashes='{}'
     
     # Build metadata
+    # Use SOURCE_DATE_EPOCH for reproducible builds if available
     local build_time
-    build_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    if [ -n "$SOURCE_DATE_EPOCH" ]; then
+        build_time=$(date -u -d "@$SOURCE_DATE_EPOCH" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -r "$SOURCE_DATE_EPOCH" +"%Y-%m-%dT%H:%M:%SZ")
+    else
+        build_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    fi
     local git_commit
     git_commit=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
     local git_tag

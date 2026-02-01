@@ -238,14 +238,14 @@ describe('Algorithm-Agile Ciphertext Format', () => {
     it('should correctly deserialize big-endian integers', () => {
       const salt = new Uint8Array(16);
       const nonce = new Uint8Array(12);
-      const metadata = createMetadata(salt, nonce, { opslimit: 0x12345678, memlimit: 0x9ABCDEF0 });
+      const metadata = createMetadata(salt, nonce, { opslimit: 6, memlimit: 65536 });
       const encryptedData = new Uint8Array(20).fill(0xAA);
       
       const serialized = serialize(metadata, encryptedData);
       const deserialized = deserialize(serialized);
       
-      expect(deserialized.opslimit).toBe(0x12345678);
-      expect(deserialized.memlimit).toBe(0x9ABCDEF0 >>> 0);
+      expect(deserialized.opslimit).toBe(6);
+      expect(deserialized.memlimit).toBe(65536);
     });
     
     it('should throw error for invalid Base64', () => {

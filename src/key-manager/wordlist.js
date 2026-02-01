@@ -1,3 +1,13 @@
+// Debug mode flag
+const DEBUG_MODE_ENABLED = false;
+
+function logError(...args) {
+  if (DEBUG_MODE_ENABLED) {
+    console.error(...args);
+  }
+}
+
+
 /**
  * EFF Long List Wordlist Module
  * 
@@ -35,7 +45,7 @@ async function loadWordList() {
     
     return wordlistData;
   } catch (error) {
-    console.error('Failed to load wordlist:', error);
+    logError('Failed to load wordlist:', error);
     throw error;
   }
 }

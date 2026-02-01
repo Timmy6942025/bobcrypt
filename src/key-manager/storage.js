@@ -169,8 +169,25 @@ export async function unlockVault(masterPassword) {
 
 /**
  * Lock the vault - clear decrypted data from memory
+ * Attempts to overwrite sensitive data before releasing references
  */
 export function lockVault() {
+  // Attempt to overwrite vault key in memory (best effort in JS)
+  if (vaultKey && typeof vaultKey === 'string') {
+    // Note: This is best-effort only - JavaScript garbage collection
+    // and string immutability mean we can't guarantee memory wiping
+    vaultKey = vaultKey.split('').map(() => '0').join('');
+  }
+  
+  // Clear key values from decrypted vault before nulling
+  if (decryptedVault && decryptedVault.keys) {
+    decryptedVault.keys.forEach(key => {
+      if (key.value) {
+        key.value = '';
+      }
+    });
+  }
+  
   decryptedVault = null;
   vaultKey = null;
 }

@@ -84,7 +84,6 @@ export async function initCrypto() {
   const sodiumMod = await loadSodium();
   await sodiumMod.ready;
   sodiumInstance = sodiumMod;
-  console.log('libsodium.js initialized, version:', sodiumMod.SODIUM_VERSION_STRING);
   
   return sodiumMod;
 }

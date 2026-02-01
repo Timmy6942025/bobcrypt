@@ -11,13 +11,16 @@ let decryptedVault = null;
 let vaultKey = null;
 
 /**
- * Generate a unique ID for keys
+ * Generate a unique ID for keys using cryptographically secure randomness
  * @returns {string} Unique key ID
  */
 function generateKeyId() {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 8);
-  return `key_${timestamp}_${random}`;
+  // Use crypto.getRandomValues for CSPRNG instead of Math.random()
+  const randomBytes = crypto.getRandomValues(new Uint8Array(16));
+  const randomHex = Array.from(randomBytes)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  return `key_${randomHex}`;
 }
 
 /**
@@ -169,23 +172,28 @@ export async function unlockVault(masterPassword) {
 
 /**
  * Lock the vault - clear decrypted data from memory
- * Attempts to overwrite sensitive data before releasing references
+ * Securely wipes sensitive data before releasing references
  */
 export function lockVault() {
-  // Attempt to overwrite vault key in memory (best effort in JS)
   if (vaultKey && typeof vaultKey === 'string') {
-    // Note: This is best-effort only - JavaScript garbage collection
-    // and string immutability mean we can't guarantee memory wiping
-    vaultKey = vaultKey.split('').map(() => '0').join('');
+    const wipedKey = vaultKey.split('').map(() => '0').join('');
+    vaultKey = wipedKey;
   }
   
-  // Clear key values from decrypted vault before nulling
   if (decryptedVault && decryptedVault.keys) {
     decryptedVault.keys.forEach(key => {
-      if (key.value) {
-        key.value = '';
+      if (key.value && typeof key.value === 'string') {
+        const wipedValue = key.value.split('').map(() => '0').join('');
+        key.value = wipedValue;
       }
+      key.value = '';
     });
+  }
+  
+  if (decryptedVault) {
+    decryptedVault.version = 0;
+    decryptedVault.createdAt = '';
+    decryptedVault.keys = [];
   }
   
   decryptedVault = null;

@@ -1,5 +1,20 @@
 let zxcvbn;
 
+/**
+ * Escape HTML special characters to prevent XSS
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text safe for HTML insertion
+ */
+function escapeHtml(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 if (typeof window !== 'undefined' && window.zxcvbn) {
   zxcvbn = window.zxcvbn;
 } else {
@@ -128,9 +143,14 @@ export function initStrengthMeter(inputElement, uiElements, onStrengthChange = n
       
       const limitedSuggestions = allSuggestions.slice(0, 3);
       
-      suggestions.innerHTML = limitedSuggestions
-        .map(s => `<div class="suggestion-item" role="listitem">${s}</div>`)
-        .join('');
+      suggestions.textContent = '';
+      limitedSuggestions.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'suggestion-item';
+        div.setAttribute('role', 'listitem');
+        div.textContent = s;
+        suggestions.appendChild(div);
+      });
     }
     
     if (onStrengthChange) {

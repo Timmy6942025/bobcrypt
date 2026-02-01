@@ -46,16 +46,13 @@ export const DEFAULT_PADDING_MAX_SIZE = 16384;
  * Generate cryptographically secure random bytes
  * @param {number} length - Number of bytes to generate
  * @returns {Uint8Array} Random bytes
+ * @throws {Error} If crypto API is not available
  */
 export function generateRandomBytes(length) {
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     return crypto.getRandomValues(new Uint8Array(length));
   }
-  const bytes = new Uint8Array(length);
-  for (let i = 0; i < length; i++) {
-    bytes[i] = Math.floor(Math.random() * 256);
-  }
-  return bytes;
+  throw new Error('Cryptographically secure random number generation is not available. Ensure you are running in a secure context (HTTPS) with a modern browser.');
 }
 
 /**

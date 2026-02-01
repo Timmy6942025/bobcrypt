@@ -777,9 +777,7 @@ function base64ToBytes(base64) {
 if (import.meta.main) {
   try {
     await initCrypto();
-    console.log('Crypto libraries initialized');
   } catch (error) {
-    console.error('Failed to initialize crypto libraries:', error.message);
     process.exit(1);
   }
 }

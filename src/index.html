@@ -1445,25 +1445,11 @@
     // Initialize crypto on page load
     let cryptoInitialized = false;
     
-    function logDebug(...args) {
-      if (DEBUG) {
-        console.log(...args);
-      }
-    }
-    
-    function logError(...args) {
-      if (DEBUG) {
-        console.error(...args);
-      }
-    }
-    
     async function initializeCrypto() {
       try {
         await initCrypto();
         cryptoInitialized = true;
-        logDebug('Crypto initialized successfully');
       } catch (error) {
-        logError('Failed to initialize crypto:', error);
         showStatus('encrypt-status', 'Failed to initialize encryption library. Please refresh the page.', 'error');
         showStatus('decrypt-status', 'Failed to initialize encryption library. Please refresh the page.', 'error');
       }

@@ -37,7 +37,7 @@ describe('Duress Password Support', () => {
           duressPassword: password,
           fakePlaintext
         })
-      ).rejects.toThrow('Duress password must be different from primary password');
+      ).rejects.toThrow('Invalid parameters');
     });
 
     it('should produce longer ciphertext with duress enabled', async () => {
@@ -161,7 +161,7 @@ describe('Duress Password Support', () => {
       const password = 'test-password';
       const invalidSalt = new Uint8Array(8); // Wrong size
 
-      expect(() => deriveDuressKey(password, invalidSalt)).toThrow('Salt must be exactly 16 bytes');
+      expect(() => deriveDuressKey(password, invalidSalt)).toThrow('Invalid parameters');
     });
   });
 

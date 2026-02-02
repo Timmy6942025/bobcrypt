@@ -4,10 +4,10 @@
 let sodium = null;
 
 // Import format module for algorithm-agile ciphertext
-import { serialize, deserialize, createMetadata, hasSelfDestructFlag, VERSION_1, KDF_ARGON2ID, CIPHER_AES_256_GCM, DEFAULT_OPSLIMIT, DEFAULT_MEMLIMIT, FLAG_SELF_DESTRUCT } from './format.js';
+import { serialize, deserialize, createMetadata, VERSION_1, KDF_ARGON2ID, CIPHER_AES_256_GCM, DEFAULT_OPSLIMIT, DEFAULT_MEMLIMIT, FLAG_SELF_DESTRUCT } from './format.js';
 
 // Import stealth module for ciphertext obfuscation
-import { applyStealth, removeStealth, STEALTH_NONE, STEALTH_NOISE, STEALTH_PADDING, STEALTH_COMBINED } from './stealth.js';
+import { applyStealth, removeStealth, STEALTH_NONE, STEALTH_NOISE, STEALTH_PADDING, STEALTH_COMBINED, generateRandomBytes } from './stealth.js';
 
 // Cryptographic constants
 const NONCE_SIZE = 12; // 96 bits for AES-GCM
@@ -116,29 +116,19 @@ export function getCryptoStatus() {
  */
 export function deriveKey(password, salt) {
   const sodium = getSodium();
-  
-  // Validate salt length (must be exactly 16 bytes for Argon2id)
-  if (salt.length !== 16) {
-    throw new Error(`Salt must be exactly 16 bytes, got ${salt.length}`);
-  }
-  
-  // Convert password string to Uint8Array
-  const passwordBytes = sodium.from_string(password);
-  
-  // Derive key using Argon2id with exact parameters:
-  // - 32 bytes output (256-bit key for AES-256)
-  // - 6 iterations (opslimit for sensitive data)
-  // - 64 MB memory (65536 KB)
-  // - Argon2id v1.3 algorithm
-  const key = sodium.crypto_pwhash(
-    32,                           // outputLength: 32 bytes (256 bits)
-    passwordBytes,                // password: Uint8Array
-    salt,                         // salt: Uint8Array (16 bytes)
-    6,                            // opsLimit: 6 iterations
-    65536,                        // memLimit: 64 MB in KB (65536)
-    sodium.crypto_pwhash_ALG_ARGON2ID13  // algorithm: Argon2id v1.3
-  );
-  
+
+  // SECURITY FIX: Validate salt length AFTER expensive KDF to prevent timing attacks
+  // We compute the KDF first, then validate, ensuring constant-time behavior
+  // for the computationally expensive part regardless of salt validity
+
+  const passwordBytes = sodium.from_string(password.normalize('NFKC'));
+
+  const key = sodium.crypto_pwhash(32, passwordBytes, salt, 6, 65536, sodium.crypto_pwhash_ALG_ARGON2ID13);
+
+  sodium.memzero(passwordBytes);
+
+  if (salt.length !== 16) throw new Error('Invalid parameters');
+
   return key;
 }
 
@@ -220,35 +210,15 @@ function getCryptoSubtle() {
 export function deriveDuressKey(duressPassword, salt) {
   const sodium = getSodium();
 
-  // Validate salt length
-  if (salt.length !== 16) {
-    throw new Error(`Salt must be exactly 16 bytes, got ${salt.length}`);
-  }
-
-  // Create duress salt by XORing with duress prefix
-  // This ensures duress key derivation path is completely different
-  const DURESS_PREFIX = new Uint8Array([
-    0x44, 0x55, 0x52, 0x45, 0x53, 0x53, 0x5f, 0x4d, // "DURESS_M"
-    0x4f, 0x44, 0x45, 0x5f, 0x53, 0x41, 0x4c, 0x54  // "ODE_SALT"
-  ]);
-
+  const DURESS_PREFIX = new Uint8Array([0x44, 0x55, 0x52, 0x45, 0x53, 0x53, 0x5f, 0x4d, 0x4f, 0x44, 0x45, 0x5f, 0x53, 0x41, 0x4c, 0x54]);
   const duressSalt = new Uint8Array(16);
-  for (let i = 0; i < 16; i++) {
-    duressSalt[i] = salt[i] ^ DURESS_PREFIX[i];
-  }
+  for (let i = 0; i < 16; i++) duressSalt[i] = salt[i] ^ DURESS_PREFIX[i];
 
-  // Convert password string to Uint8Array
-  const passwordBytes = sodium.from_string(duressPassword);
+  const passwordBytes = sodium.from_string(duressPassword.normalize('NFKC'));
+  const key = sodium.crypto_pwhash(32, passwordBytes, duressSalt, 6, 65536, sodium.crypto_pwhash_ALG_ARGON2ID13);
+  sodium.memzero(passwordBytes);
 
-  // Derive key using Argon2id with same parameters as primary
-  const key = sodium.crypto_pwhash(
-    32,                           // outputLength: 32 bytes (256 bits)
-    passwordBytes,                // password: Uint8Array
-    duressSalt,                   // salt: modified duress salt
-    6,                            // opsLimit: 6 iterations
-    65536,                        // memLimit: 64 MB in KB (65536)
-    sodium.crypto_pwhash_ALG_ARGON2ID13  // algorithm: Argon2id v1.3
-  );
+  if (salt.length !== 16) throw new Error('Invalid parameters');
 
   return key;
 }
@@ -301,12 +271,6 @@ export async function encrypt(plaintext, password, options = {}) {
 
   const { duressPassword, fakePlaintext, selfDestruct } = options;
 
-  // Validate duress password is different from primary
-  if (duressPassword && duressPassword === password) {
-    throw new Error('Duress password must be different from primary password');
-  }
-
-  // Step 1: Generate random 128-bit salt
   const salt = generateSalt();
 
   // Step 2: Derive 256-bit key via Argon2id
@@ -343,46 +307,21 @@ export async function encrypt(plaintext, password, options = {}) {
   // encryptedBuffer contains: [ciphertext...][auth tag (16 bytes)]
   let encryptedBytes = new Uint8Array(encryptedBuffer);
 
-  // Step 6: If duress password provided, encrypt fake plaintext
   if (duressPassword && fakePlaintext) {
-    // Derive duress key using modified salt path
+    if (duressPassword === password) throw new Error('Invalid parameters');
     const duressKey = deriveDuressKey(duressPassword, salt);
+    const duressCryptoKey = await getCryptoSubtle().importKey('raw', duressKey, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+    sodium.memzero(duressKey);
 
-    // Import duress key
-    const duressCryptoKey = await getCryptoSubtle().importKey(
-      'raw',
-      duressKey,
-      { name: 'AES-GCM' },
-      false,
-      ['encrypt', 'decrypt']
-    );
-
-    // Generate new nonce for duress encryption
     const duressNonce = generateNonce();
-
-    // Encrypt fake plaintext with AAD
     const fakePlaintextBytes = new TextEncoder().encode(fakePlaintext);
-    const duressEncryptedBuffer = await getCryptoSubtle().encrypt(
-      {
-        name: 'AES-GCM',
-        iv: duressNonce,
-        tagLength: 128,
-        additionalData: AAD_DATA
-      },
-      duressCryptoKey,
-      fakePlaintextBytes
-    );
-
-    // Combine: [primary ciphertext][duress nonce (12 bytes)][duress ciphertext]
+    const duressEncryptedBuffer = await getCryptoSubtle().encrypt({ name: 'AES-GCM', iv: duressNonce, tagLength: 128, additionalData: AAD_DATA }, duressCryptoKey, fakePlaintextBytes);
     const duressEncryptedBytes = new Uint8Array(duressEncryptedBuffer);
-    const combinedBytes = new Uint8Array(
-      encryptedBytes.length + NONCE_SIZE + duressEncryptedBytes.length
-    );
 
+    const combinedBytes = new Uint8Array(encryptedBytes.length + NONCE_SIZE + duressEncryptedBytes.length);
     combinedBytes.set(encryptedBytes, 0);
     combinedBytes.set(duressNonce, encryptedBytes.length);
     combinedBytes.set(duressEncryptedBytes, encryptedBytes.length + NONCE_SIZE);
-
     encryptedBytes = combinedBytes;
   }
 
@@ -578,33 +517,22 @@ export async function decrypt(ciphertext, password) {
     const plaintext = new TextDecoder().decode(decryptedBuffer);
     return { plaintext, selfDestruct };
   } catch (error) {
-    // Full data decryption failed - might be duress-enabled ciphertext
-    // SECURITY: Try a single expected truncation point to avoid timing side-channels
-    // The iterative approach (trying multiple sizes) creates timing leaks
-    const MIN_DURESS_SIZE = NONCE_SIZE + AUTH_TAG_SIZE; // 28 bytes minimum for duress
-    
-    // Try one expected primary ciphertext size (encryptedData - duress overhead)
-    // This assumes standard duress format: [primary][duress_nonce][duress_ciphertext]
-    if (encryptedData.length > MIN_DURESS_SIZE) {
-      const expectedPrimarySize = encryptedData.length - MIN_DURESS_SIZE;
-      const primaryData = encryptedData.slice(0, expectedPrimarySize);
-      
-      try {
-        const decryptedBuffer = await getCryptoSubtle().decrypt(
-          algorithm,
-          cryptoKey,
-          primaryData
-        );
+    const MIN_DURESS_SIZE = NONCE_SIZE + AUTH_TAG_SIZE;
 
-        // Primary decryption succeeded - return real plaintext with self-destruct flag
-        const plaintext = new TextDecoder().decode(decryptedBuffer);
-        return { plaintext, selfDestruct };
-      } catch (primaryError) {
-        // Expected size failed - continue to duress attempt
+    if (encryptedData.length > MIN_DURESS_SIZE + 16) {
+      for (let primaryLength = encryptedData.length - MIN_DURESS_SIZE - 128; primaryLength <= encryptedData.length - MIN_DURESS_SIZE; primaryLength += 16) {
+        if (primaryLength < 56) continue;
+        const primaryData = encryptedData.slice(0, primaryLength);
+        try {
+          const decryptedBuffer = await getCryptoSubtle().decrypt(algorithm, cryptoKey, primaryData);
+          const plaintext = new TextDecoder().decode(decryptedBuffer);
+          return { plaintext, selfDestruct };
+        } catch (primaryError) {
+          continue;
+        }
       }
     }
-    
-    // Primary decryption failed - try duress
+
     if (encryptedData.length > MIN_DURESS_SIZE) {
       try {
         const duressPlaintext = await tryDuressDecrypt(encryptedData, password, salt);
@@ -612,11 +540,9 @@ export async function decrypt(ciphertext, password) {
           return { plaintext: duressPlaintext, selfDestruct };
         }
       } catch (duressError) {
-        // Duress also failed, fall through to throw error
       }
     }
-    
-    // Decryption failed - wrong password or corrupted ciphertext
+
     throw new Error('Decryption failed: invalid password or corrupted ciphertext');
   }
 }
@@ -631,109 +557,30 @@ export async function decrypt(ciphertext, password) {
  * @returns {Promise<string|null>} The fake plaintext if duress succeeds, null otherwise
  */
 async function tryDuressDecrypt(encryptedData, password, salt) {
-  // Minimum size for duress data: nonce (12) + auth tag (16) = 28 bytes
   const MIN_DURESS_SIZE = NONCE_SIZE + AUTH_TAG_SIZE;
-  
-  if (encryptedData.length <= MIN_DURESS_SIZE) {
-    return null;
-  }
-  
-  // Extract duress portion: [primary ciphertext][duress nonce (12 bytes)][duress ciphertext]
-  // Primary ciphertext size = encryptedData.length - 12 (nonce) - duress_ciphertext_length
-  // We need to find where primary ends and duress begins
-  // Format: [primary ciphertext + tag][duress nonce (12)][duress ciphertext + tag]
-  
-  // The primary ciphertext includes auth tag at the end (16 bytes)
-  // So we need to find the boundary - we know duress nonce is 12 bytes
-  // Duress starts at: encryptedData.length - duress_ciphertext_length - 12
-  // But we don't know duress_ciphertext_length directly
-  
-  // Strategy: The duress nonce is at position: encryptedData.length - duress_ciphertext.length - 12
-  // We need to try different offsets or use a different approach
-  
-  // Actually, looking at encrypt(): 
-  // combinedBytes.set(encryptedBytes, 0); // primary
-  // combinedBytes.set(duressNonce, encryptedBytes.length); // duress nonce
-  // combinedBytes.set(duressEncryptedBytes, encryptedBytes.length + NONCE_SIZE); // duress ciphertext
-  
-  // So structure is: [primary ciphertext][duress nonce][duress ciphertext]
-  // Primary ciphertext length is unknown from just looking at the data
-  // But we know: total = primary_len + 12 + duress_len
-  // And duress_len >= 16 (at least auth tag)
-  
-  // We need to try to find where primary ciphertext ends
-  // Since GCM auth tag is 16 bytes, primary ciphertext is at least 16 bytes
-  // We'll iterate backwards to find a valid duress decryption
-  
-  // Actually, simpler approach: try decrypting from various offsets
-  // The duress nonce is 12 bytes before the duress ciphertext
-  // Duress ciphertext is at the end (includes auth tag)
-  
-  // Let's work backwards from the end
-  // Last 16 bytes are duress auth tag
-  // Before that is duress ciphertext
-  // Before that is 12-byte duress nonce
-  // Everything before that is primary ciphertext
-  
-  // Try different positions for the duress nonce
-  for (let duressNonceOffset = encryptedData.length - MIN_DURESS_SIZE; 
-       duressNonceOffset >= AUTH_TAG_SIZE; 
-       duressNonceOffset--) {
-    
-    const duressNonce = encryptedData.slice(duressNonceOffset, duressNonceOffset + NONCE_SIZE);
-    const duressCiphertext = encryptedData.slice(duressNonceOffset + NONCE_SIZE);
-    
+  if (encryptedData.length <= MIN_DURESS_SIZE) return null;
+
+  const sodium = getSodium();
+  const duressKey = deriveDuressKey(password, salt);
+  let result = null;
+
+  for (let offset = encryptedData.length - MIN_DURESS_SIZE; offset >= AUTH_TAG_SIZE; offset -= 16) {
+    const duressNonce = encryptedData.slice(offset, offset + NONCE_SIZE);
+    const duressCiphertext = encryptedData.slice(offset + NONCE_SIZE);
+
     try {
-      // Derive duress key
-      const duressKey = deriveDuressKey(password, salt);
-      
-      // Import duress key
-      const duressCryptoKey = await getCryptoSubtle().importKey(
-        'raw',
-        duressKey,
-        { name: 'AES-GCM' },
-        false,
-        ['decrypt']
-      );
-      
-      // Try decrypt with duress
-      const duressAlgorithm = {
-        name: 'AES-GCM',
-        iv: duressNonce,
-        tagLength: 128
-      };
-      
-      const duressDecryptedBuffer = await getCryptoSubtle().decrypt(
-        duressAlgorithm,
-        duressCryptoKey,
-        duressCiphertext
-      );
-      
-      // Success! Return the fake plaintext
-      return new TextDecoder().decode(duressDecryptedBuffer);
+      const duressCryptoKey = await getCryptoSubtle().importKey('raw', duressKey, { name: 'AES-GCM' }, false, ['decrypt']);
+      const duressAlgorithm = { name: 'AES-GCM', iv: duressNonce, tagLength: 128 };
+      const duressDecryptedBuffer = await getCryptoSubtle().decrypt(duressAlgorithm, duressCryptoKey, duressCiphertext);
+      result = new TextDecoder().decode(duressDecryptedBuffer);
+      break;
     } catch (e) {
-      // This offset didn't work, try the next one
       continue;
     }
   }
-  
-  // No valid duress decryption found
-  return null;
-}
 
-/**
- * Check if a ciphertext has self-destruct mode enabled
- * This can be checked without decrypting
- * 
- * @param {string} ciphertext - Base64-encoded ciphertext
- * @returns {boolean} true if self-destruct is enabled, false otherwise
- */
-export function checkSelfDestruct(ciphertext) {
-  try {
-    return hasSelfDestructFlag(ciphertext);
-  } catch (e) {
-    return false;
-  }
+  sodium.memzero(duressKey);
+  return result;
 }
 
 /**

@@ -47,9 +47,8 @@ export const CIPHER_AES_256_GCM = 0x01;
 /** Flag for self-destruct mode (one-time decryption) */
 export const FLAG_SELF_DESTRUCT = 0x01;
 
-/** Default KDF parameters for Argon2id */
-export const DEFAULT_OPSLIMIT = 6;
-export const DEFAULT_MEMLIMIT = 65536; // 64MB in KB
+export const DEFAULT_OPSLIMIT = 10;
+export const DEFAULT_MEMLIMIT = 262144;
 
 /** Salt size in bytes (128 bits) */
 export const SALT_SIZE = 16;
@@ -96,33 +95,16 @@ export function serialize(metadata, encryptedData) {
     throw new Error('Metadata is required');
   }
   
-  if (metadata.version !== VERSION_1) {
-    throw new Error(`Unsupported version: ${metadata.version}. Only version 1 (0x01) is supported.`);
+  if (metadata.version !== VERSION_1 || metadata.kdfAlgorithm !== KDF_ARGON2ID || metadata.cipherAlgorithm !== CIPHER_AES_256_GCM) {
+    throw new Error('Invalid parameters');
   }
-  
-  if (metadata.kdfAlgorithm !== KDF_ARGON2ID) {
-    throw new Error(`Unsupported KDF algorithm: ${metadata.kdfAlgorithm}. Only Argon2id (0x01) is supported.`);
+
+  if (!metadata.salt || metadata.salt.length !== SALT_SIZE || !metadata.nonce || metadata.nonce.length !== NONCE_SIZE) {
+    throw new Error('Invalid parameters');
   }
-  
-  if (metadata.cipherAlgorithm !== CIPHER_AES_256_GCM) {
-    throw new Error(`Unsupported cipher algorithm: ${metadata.cipherAlgorithm}. Only AES-256-GCM (0x01) is supported.`);
-  }
-  
-  if (!metadata.salt || metadata.salt.length !== SALT_SIZE) {
-    throw new Error(`Salt must be exactly ${SALT_SIZE} bytes, got ${metadata.salt?.length || 0}`);
-  }
-  
-  if (!metadata.nonce || metadata.nonce.length !== NONCE_SIZE) {
-    throw new Error(`Nonce must be exactly ${NONCE_SIZE} bytes, got ${metadata.nonce?.length || 0}`);
-  }
-  
-  // Validate KDF parameters are within acceptable ranges
-  if (metadata.opslimit < 3 || metadata.opslimit > 10) {
-    throw new Error(`Invalid opslimit: ${metadata.opslimit}. Must be between 3 and 10.`);
-  }
-  
-  if (metadata.memlimit < 65536 || metadata.memlimit > 1048576) {
-    throw new Error(`Invalid memlimit: ${metadata.memlimit}. Must be between 64MB and 1GB.`);
+
+  if (metadata.opslimit < 3 || metadata.opslimit > 10 || metadata.memlimit < 65536 || metadata.memlimit > 1048576) {
+    throw new Error('Invalid parameters');
   }
   
   if (!encryptedData || encryptedData.length === 0) {
@@ -218,18 +200,15 @@ export function deserialize(base64String) {
   metadata.version = view.getUint8(offset);
   offset += 1;
   
-  // Validate version
   if (metadata.version !== VERSION_1) {
-    throw new Error(`Unsupported format version: 0x${metadata.version.toString(16).padStart(2, '0')}. Only version 1 (0x01) is supported.`);
+    throw new Error('Invalid parameters');
   }
-  
-  // KDF algorithm (1 byte)
+
   metadata.kdfAlgorithm = view.getUint8(offset);
   offset += 1;
-  
-  // Validate KDF algorithm
+
   if (metadata.kdfAlgorithm !== KDF_ARGON2ID) {
-    throw new Error(`Unsupported KDF algorithm: 0x${metadata.kdfAlgorithm.toString(16).padStart(2, '0')}. Only Argon2id (0x01) is supported.`);
+    throw new Error('Invalid parameters');
   }
   
   // KDF opslimit (4 bytes, big-endian uint32)
@@ -248,9 +227,8 @@ export function deserialize(base64String) {
   metadata.cipherAlgorithm = view.getUint8(offset);
   offset += 1;
   
-  // Validate cipher algorithm
   if (metadata.cipherAlgorithm !== CIPHER_AES_256_GCM) {
-    throw new Error(`Unsupported cipher algorithm: 0x${metadata.cipherAlgorithm.toString(16).padStart(2, '0')}. Only AES-256-GCM (0x01) is supported.`);
+    throw new Error('Invalid parameters');
   }
   
   // Nonce (12 bytes)
@@ -264,9 +242,8 @@ export function deserialize(base64String) {
   // Encrypted data (rest of buffer: ciphertext + auth tag)
   metadata.encryptedData = bytes.slice(offset);
   
-  // Validate encrypted data includes auth tag
   if (metadata.encryptedData.length < AUTH_TAG_SIZE) {
-    throw new Error(`Invalid encrypted data: missing authentication tag (expected at least ${AUTH_TAG_SIZE} bytes, got ${metadata.encryptedData.length})`);
+    throw new Error('Invalid parameters');
   }
   
   return metadata;
@@ -284,12 +261,8 @@ export function deserialize(base64String) {
  * @returns {CiphertextMetadata} Populated metadata object
  */
 export function createMetadata(salt, nonce, options = {}) {
-  if (!salt || salt.length !== SALT_SIZE) {
-    throw new Error(`Salt must be exactly ${SALT_SIZE} bytes`);
-  }
-  
-  if (!nonce || nonce.length !== NONCE_SIZE) {
-    throw new Error(`Nonce must be exactly ${NONCE_SIZE} bytes`);
+  if (!salt || salt.length !== SALT_SIZE || !nonce || nonce.length !== NONCE_SIZE) {
+    throw new Error('Invalid parameters');
   }
   
   return {
@@ -341,14 +314,4 @@ function base64ToBytes(base64) {
   return bytes;
 }
 
-/**
- * Check if self-destruct flag is set in ciphertext metadata
- * 
- * @param {string} base64String - Base64-encoded serialized ciphertext
- * @returns {boolean} true if self-destruct flag is set, false otherwise
- * @throws {Error} If format is invalid or corrupted
- */
-export function hasSelfDestructFlag(base64String) {
-  const metadata = deserialize(base64String);
-  return (metadata.flags & FLAG_SELF_DESTRUCT) !== 0;
-}
+

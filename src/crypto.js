@@ -318,10 +318,13 @@ export async function encrypt(plaintext, password, options = {}) {
     const duressEncryptedBuffer = await getCryptoSubtle().encrypt({ name: 'AES-GCM', iv: duressNonce, tagLength: 128, additionalData: AAD_DATA }, duressCryptoKey, fakePlaintextBytes);
     const duressEncryptedBytes = new Uint8Array(duressEncryptedBuffer);
 
-    const combinedBytes = new Uint8Array(encryptedBytes.length + NONCE_SIZE + duressEncryptedBytes.length);
+    // Format: [primary ciphertext][duress nonce (12 bytes)][duress ciphertext][4-byte duress length (BE)]
+    const combinedBytes = new Uint8Array(encryptedBytes.length + NONCE_SIZE + duressEncryptedBytes.length + 4);
     combinedBytes.set(encryptedBytes, 0);
     combinedBytes.set(duressNonce, encryptedBytes.length);
     combinedBytes.set(duressEncryptedBytes, encryptedBytes.length + NONCE_SIZE);
+    const view = new DataView(combinedBytes.buffer);
+    view.setUint32(encryptedBytes.length + NONCE_SIZE + duressEncryptedBytes.length, duressEncryptedBytes.length, false);
     encryptedBytes = combinedBytes;
   }
 
@@ -517,18 +520,21 @@ export async function decrypt(ciphertext, password) {
     const plaintext = new TextDecoder().decode(decryptedBuffer);
     return { plaintext, selfDestruct };
   } catch (error) {
-    const MIN_DURESS_SIZE = NONCE_SIZE + AUTH_TAG_SIZE;
+    const MIN_DURESS_SIZE = NONCE_SIZE + AUTH_TAG_SIZE + 4;
 
     if (encryptedData.length > MIN_DURESS_SIZE + 16) {
-      for (let primaryLength = encryptedData.length - MIN_DURESS_SIZE - 128; primaryLength <= encryptedData.length - MIN_DURESS_SIZE; primaryLength += 16) {
-        if (primaryLength < 56) continue;
-        const primaryData = encryptedData.slice(0, primaryLength);
-        try {
-          const decryptedBuffer = await getCryptoSubtle().decrypt(algorithm, cryptoKey, primaryData);
-          const plaintext = new TextDecoder().decode(decryptedBuffer);
-          return { plaintext, selfDestruct };
-        } catch (primaryError) {
-          continue;
+      const view = new DataView(encryptedData.buffer, encryptedData.byteOffset);
+      const duressLength = view.getUint32(encryptedData.length - 4, false);
+      if (duressLength > 0 && duressLength < 10000) {
+        const primaryLength = encryptedData.length - 4 - NONCE_SIZE - duressLength;
+        if (primaryLength >= 56) {
+          const primaryData = encryptedData.slice(0, primaryLength);
+          try {
+            const decryptedBuffer = await getCryptoSubtle().decrypt(algorithm, cryptoKey, primaryData);
+            const plaintext = new TextDecoder().decode(decryptedBuffer);
+            return { plaintext, selfDestruct };
+          } catch (primaryError) {
+          }
         }
       }
     }
@@ -557,30 +563,30 @@ export async function decrypt(ciphertext, password) {
  * @returns {Promise<string|null>} The fake plaintext if duress succeeds, null otherwise
  */
 async function tryDuressDecrypt(encryptedData, password, salt) {
-  const MIN_DURESS_SIZE = NONCE_SIZE + AUTH_TAG_SIZE;
+  const MIN_DURESS_SIZE = NONCE_SIZE + AUTH_TAG_SIZE + 4;
   if (encryptedData.length <= MIN_DURESS_SIZE) return null;
 
-  const sodium = getSodium();
-  const duressKey = deriveDuressKey(password, salt);
-  let result = null;
+  const view = new DataView(encryptedData.buffer, encryptedData.byteOffset);
+  const duressLength = view.getUint32(encryptedData.length - 4, false);
 
-  for (let offset = encryptedData.length - MIN_DURESS_SIZE; offset >= AUTH_TAG_SIZE; offset -= 16) {
-    const duressNonce = encryptedData.slice(offset, offset + NONCE_SIZE);
-    const duressCiphertext = encryptedData.slice(offset + NONCE_SIZE);
+  if (duressLength === 0 || duressLength > 10000) return null;
 
-    try {
-      const duressCryptoKey = await getCryptoSubtle().importKey('raw', duressKey, { name: 'AES-GCM' }, false, ['decrypt']);
-      const duressAlgorithm = { name: 'AES-GCM', iv: duressNonce, tagLength: 128 };
-      const duressDecryptedBuffer = await getCryptoSubtle().decrypt(duressAlgorithm, duressCryptoKey, duressCiphertext);
-      result = new TextDecoder().decode(duressDecryptedBuffer);
-      break;
-    } catch (e) {
-      continue;
-    }
+  const duressNonceOffset = encryptedData.length - 4 - NONCE_SIZE - duressLength;
+  if (duressNonceOffset < 0) return null;
+
+  const duressNonce = encryptedData.slice(duressNonceOffset, duressNonceOffset + NONCE_SIZE);
+  const duressCiphertext = encryptedData.slice(duressNonceOffset + NONCE_SIZE, encryptedData.length - 4);
+
+  try {
+    const duressKey = deriveDuressKey(password, salt);
+    const duressCryptoKey = await getCryptoSubtle().importKey('raw', duressKey, { name: 'AES-GCM' }, false, ['decrypt']);
+    const duressAlgorithm = { name: 'AES-GCM', iv: duressNonce, tagLength: 128 };
+    const duressDecryptedBuffer = await getCryptoSubtle().decrypt(duressAlgorithm, duressCryptoKey, duressCiphertext);
+    sodium.memzero(duressKey);
+    return new TextDecoder().decode(duressDecryptedBuffer);
+  } catch (e) {
+    return null;
   }
-
-  sodium.memzero(duressKey);
-  return result;
 }
 
 /**

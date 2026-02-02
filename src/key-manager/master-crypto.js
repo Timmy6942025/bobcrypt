@@ -38,14 +38,14 @@ export function deriveMasterKey(password, salt) {
   
   // Derive key using Argon2id with specified parameters:
   // - 32 bytes output (256-bit key)
-  // - 3 iterations (opslimit)
+  // - 10 iterations (opslimit) - consistent with crypto.js
   // - 256 MiB memory (262144 KB)
   // - Argon2id v1.3 algorithm
   const key = sodium.crypto_pwhash(
     32,                           // outputLength: 32 bytes (256 bits)
     passwordBytes,                // password: Uint8Array
     salt,                         // salt: Uint8Array (16 bytes)
-    3,                            // opsLimit: 3 iterations
+    10,                           // opsLimit: 10 iterations
     262144,                       // memLimit: 256 MiB in KB (262144)
     sodium.crypto_pwhash_ALG_ARGON2ID13  // algorithm: Argon2id v1.3
   );

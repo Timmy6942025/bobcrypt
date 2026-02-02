@@ -101,13 +101,13 @@ export function getCryptoStatus() {
 
 /**
  * Derive a 256-bit (32-byte) encryption key from a password using Argon2id
- * 
+ *
  * Uses libsodium's crypto_pwhash with the following parameters:
  * - Algorithm: Argon2id v1.3 (sodium.crypto_pwhash_ALG_ARGON2ID13)
  * - Output length: 32 bytes (256 bits)
- * - Operations limit: 6 iterations (sensitive opslimit)
- * - Memory limit: 64 MB (65536 KB)
- * 
+ * - Operations limit: 10 iterations (sensitive opslimit)
+ * - Memory limit: 256 MB (262144 KB)
+ *
  * @param {string} password - The password to derive the key from
  * @param {Uint8Array} salt - A 16-byte (128-bit) random salt. Must be unique per operation.
  * @returns {Uint8Array} A 32-byte Uint8Array containing the derived key
@@ -117,17 +117,17 @@ export function getCryptoStatus() {
 export function deriveKey(password, salt) {
   const sodium = getSodium();
 
-  // SECURITY FIX: Validate salt length AFTER expensive KDF to prevent timing attacks
-  // We compute the KDF first, then validate, ensuring constant-time behavior
-  // for the computationally expensive part regardless of salt validity
+  // SECURITY: Validate salt length BEFORE expensive KDF to prevent timing attacks
+  // Invalid salts are rejected immediately without performing expensive computation
+  if (!salt || salt.length !== 16) {
+    throw new Error('Salt must be exactly 16 bytes');
+  }
 
   const passwordBytes = sodium.from_string(password.normalize('NFKC'));
 
-  const key = sodium.crypto_pwhash(32, passwordBytes, salt, 6, 65536, sodium.crypto_pwhash_ALG_ARGON2ID13);
+  const key = sodium.crypto_pwhash(32, passwordBytes, salt, 10, 262144, sodium.crypto_pwhash_ALG_ARGON2ID13);
 
   sodium.memzero(passwordBytes);
-
-  if (salt.length !== 16) throw new Error('Invalid parameters');
 
   return key;
 }
@@ -210,15 +210,18 @@ function getCryptoSubtle() {
 export function deriveDuressKey(duressPassword, salt) {
   const sodium = getSodium();
 
+  // SECURITY: Validate salt length BEFORE expensive KDF to prevent timing attacks
+  if (!salt || salt.length !== 16) {
+    throw new Error('Salt must be exactly 16 bytes');
+  }
+
   const DURESS_PREFIX = new Uint8Array([0x44, 0x55, 0x52, 0x45, 0x53, 0x53, 0x5f, 0x4d, 0x4f, 0x44, 0x45, 0x5f, 0x53, 0x41, 0x4c, 0x54]);
   const duressSalt = new Uint8Array(16);
   for (let i = 0; i < 16; i++) duressSalt[i] = salt[i] ^ DURESS_PREFIX[i];
 
   const passwordBytes = sodium.from_string(duressPassword.normalize('NFKC'));
-  const key = sodium.crypto_pwhash(32, passwordBytes, duressSalt, 6, 65536, sodium.crypto_pwhash_ALG_ARGON2ID13);
+  const key = sodium.crypto_pwhash(32, passwordBytes, duressSalt, 10, 262144, sodium.crypto_pwhash_ALG_ARGON2ID13);
   sodium.memzero(passwordBytes);
-
-  if (salt.length !== 16) throw new Error('Invalid parameters');
 
   return key;
 }
@@ -308,7 +311,7 @@ export async function encrypt(plaintext, password, options = {}) {
   let encryptedBytes = new Uint8Array(encryptedBuffer);
 
   if (duressPassword && fakePlaintext) {
-    if (duressPassword === password) throw new Error('Invalid parameters');
+    if (duressPassword === password) throw new Error('Duress password must be different from primary password');
     const duressKey = deriveDuressKey(duressPassword, salt);
     const duressCryptoKey = await getCryptoSubtle().importKey('raw', duressKey, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
     sodium.memzero(duressKey);
@@ -527,13 +530,14 @@ export async function decrypt(ciphertext, password) {
       const duressLength = view.getUint32(encryptedData.length - 4, false);
       if (duressLength > 0 && duressLength < 10000) {
         const primaryLength = encryptedData.length - 4 - NONCE_SIZE - duressLength;
-        if (primaryLength >= 56) {
+        if (primaryLength >= AUTH_TAG_SIZE + 1) {  // At least 1 byte ciphertext + 16 byte auth tag
           const primaryData = encryptedData.slice(0, primaryLength);
           try {
             const decryptedBuffer = await getCryptoSubtle().decrypt(algorithm, cryptoKey, primaryData);
             const plaintext = new TextDecoder().decode(decryptedBuffer);
             return { plaintext, selfDestruct };
           } catch (primaryError) {
+            // Primary decryption with truncated data failed - continue to try duress
           }
         }
       }
@@ -546,6 +550,7 @@ export async function decrypt(ciphertext, password) {
           return { plaintext: duressPlaintext, selfDestruct };
         }
       } catch (duressError) {
+        // Duress decryption failed - will fall through to final error
       }
     }
 
@@ -580,7 +585,9 @@ async function tryDuressDecrypt(encryptedData, password, salt) {
   try {
     const duressKey = deriveDuressKey(password, salt);
     const duressCryptoKey = await getCryptoSubtle().importKey('raw', duressKey, { name: 'AES-GCM' }, false, ['decrypt']);
-    const duressAlgorithm = { name: 'AES-GCM', iv: duressNonce, tagLength: 128 };
+    // Include AAD for duress decryption to match encryption
+    const AAD_DATA = new TextEncoder().encode('encyphrix-v1');
+    const duressAlgorithm = { name: 'AES-GCM', iv: duressNonce, tagLength: 128, additionalData: AAD_DATA };
     const duressDecryptedBuffer = await getCryptoSubtle().decrypt(duressAlgorithm, duressCryptoKey, duressCiphertext);
     sodium.memzero(duressKey);
     return new TextDecoder().decode(duressDecryptedBuffer);

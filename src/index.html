@@ -480,12 +480,14 @@
     .output-area.success {
       border-color: var(--electric);
       background: linear-gradient(135deg, var(--void) 0%, rgba(0, 255, 136, 0.05) 100%);
+      animation: successPulse 1s ease;
     }
 
     .output-area.error {
       border-color: var(--danger);
       background: linear-gradient(135deg, var(--void) 0%, rgba(255, 51, 102, 0.05) 100%);
       color: var(--danger);
+      animation: errorShake 0.5s ease;
     }
 
     /* === PASSWORD STRENGTH METER === */
@@ -624,16 +626,36 @@
       }
     }
 
+    @keyframes successPulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(0, 255, 136, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 136, 0);
+      }
+    }
+
+    @keyframes errorShake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
     .status-message.success {
       background: rgba(0, 255, 136, 0.1);
       border: 1px solid var(--electric);
       color: var(--electric);
+      animation: slideIn 0.3s ease, successPulse 1s ease;
     }
 
     .status-message.error {
       background: rgba(255, 51, 102, 0.1);
       border: 1px solid var(--danger);
       color: var(--danger);
+      animation: slideIn 0.3s ease, errorShake 0.5s ease;
     }
 
     .status-message.info {
@@ -1228,14 +1250,13 @@
           </div>
 
           <div class="form-group strength-section">
-            <label class="form-label">Password Strength</label>
-            <input type="password" id="strength-password" class="form-input" placeholder="Test password strength..." style="margin-bottom: 0.5rem;" />
+            <label class="form-label">Password Strength Meter</label>
             <div class="strength-meter" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" id="strength-bar-container">
               <div class="strength-bar-container">
                 <div class="strength-bar" id="strength-bar"></div>
               </div>
               <div class="strength-info">
-                <span class="strength-label" id="strength-label">Enter a password</span>
+                <span class="strength-label" id="strength-label">Enter a password to see strength</span>
                 <span class="crack-time" id="crack-time"></span>
               </div>
             </div>
@@ -1251,6 +1272,10 @@
               >
               <span>Enable duress password (coercion resistance)</span>
             </label>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; margin-left: 26px;">
+              Creates a secondary password that shows fake content. Use this if forced to decrypt under duress.
+              <strong style="color: var(--info);">The real message remains hidden.</strong>
+            </p>
           </div>
 
           <div class="form-group">
@@ -1480,11 +1505,17 @@
       element.className = `status-message ${type}`;
       element.style.display = 'flex';
       
-      // Auto-hide after 5 seconds for success messages
+      // Clear any existing auto-hide timer
+      if (element._autoHideTimer) {
+        clearTimeout(element._autoHideTimer);
+      }
+      
+      // Auto-hide after 8 seconds for success messages only
+      // Error messages persist until user takes action
       if (type === 'success') {
-        setTimeout(() => {
+        element._autoHideTimer = setTimeout(() => {
           element.style.display = 'none';
-        }, 5000);
+        }, 8000);
       }
     }
 
@@ -1553,6 +1584,47 @@
 
     // Character counter for fake plaintext
     updateCharCounter('fake-plaintext', 'fake-plaintext-counter', 10000);
+
+    // Real-time validation for encryption form
+    function setupRealTimeValidation() {
+      const plaintext = document.getElementById('plaintext');
+      const password = document.getElementById('encrypt-password');
+      const encryptBtn = document.getElementById('encrypt-btn');
+      
+      function validateEncryptForm() {
+        const hasText = plaintext.value.trim().length > 0;
+        const hasPassword = password.value.length >= 8;
+        encryptBtn.disabled = !(hasText && hasPassword);
+      }
+      
+      plaintext.addEventListener('input', validateEncryptForm);
+      password.addEventListener('input', validateEncryptForm);
+      
+      // Initial validation
+      validateEncryptForm();
+    }
+    
+    // Real-time validation for decryption form
+    function setupDecryptValidation() {
+      const ciphertext = document.getElementById('ciphertext');
+      const password = document.getElementById('decrypt-password');
+      const decryptBtn = document.getElementById('decrypt-btn');
+      
+      function validateDecryptForm() {
+        const hasCiphertext = ciphertext.value.trim().length > 0;
+        const hasPassword = password.value.length > 0;
+        decryptBtn.disabled = !(hasCiphertext && hasPassword);
+      }
+      
+      ciphertext.addEventListener('input', validateDecryptForm);
+      password.addEventListener('input', validateDecryptForm);
+      
+      // Initial validation
+      validateDecryptForm();
+    }
+    
+    setupRealTimeValidation();
+    setupDecryptValidation();
 
     // Encrypt functionality
     document.getElementById('encrypt-btn').addEventListener('click', async () => {
@@ -1666,8 +1738,8 @@
         logError('Encryption error:', error);
         output.textContent = '';
         output.classList.add('error');
-        const userMessage = sanitizeErrorMessage(error.message);
-        showStatus('encrypt-status', 'Encryption failed: ' + userMessage, 'error');
+        const userMessage = sanitizeErrorMessage(error.message, 'encrypt');
+        showStatus('encrypt-status', userMessage, 'error');
 
         const btn = document.getElementById('encrypt-btn');
         btn.innerHTML = '<span aria-hidden="true">🔐</span> Encrypt Message';
@@ -1765,12 +1837,15 @@
         logError('Decryption error:', error);
         output.textContent = '';
         output.classList.add('error');
-        const userMessage = sanitizeErrorMessage(error.message);
-        showStatus('decrypt-status', 'Decryption failed: ' + userMessage, 'error');
+        const userMessage = sanitizeErrorMessage(error.message, 'decrypt');
+        showStatus('decrypt-status', userMessage, 'error');
         
         const btn = document.getElementById('decrypt-btn');
         btn.innerHTML = '<span aria-hidden="true">🔓</span> Decrypt Message';
         btn.disabled = false;
+        
+        // Focus the password field for quick retry
+        document.getElementById('decrypt-password').focus();
       }
     });
 
@@ -1829,12 +1904,23 @@
       }
     });
 
-    // Clear functionality
+    // Clear functionality with confirmation if data exists
     document.getElementById('clear-encrypt-btn').addEventListener('click', () => {
-      document.getElementById('plaintext').value = '';
-      document.getElementById('encrypt-password').value = '';
-      document.getElementById('ciphertext-output').textContent = '';
-      document.getElementById('ciphertext-output').classList.remove('success', 'error');
+      const plaintext = document.getElementById('plaintext');
+      const password = document.getElementById('encrypt-password');
+      const output = document.getElementById('ciphertext-output');
+      
+      // Check if there's any data to clear
+      const hasData = plaintext.value.trim() || password.value || output.textContent;
+      
+      if (hasData && !confirm('Are you sure you want to clear all encryption data? This cannot be undone.')) {
+        return;
+      }
+      
+      plaintext.value = '';
+      password.value = '';
+      output.textContent = '';
+      output.classList.remove('success', 'error');
       document.getElementById('copy-encrypt-btn').disabled = true;
       document.getElementById('plaintext-counter').textContent = '0 characters';
       document.getElementById('plaintext-counter').classList.remove('warning', 'danger');
@@ -1844,14 +1930,29 @@
       document.getElementById('enable-duress').checked = false;
       document.getElementById('duress-fields').style.display = 'none';
       hideStatus('encrypt-status');
-      document.getElementById('plaintext').focus();
+      
+      // Reset validation state
+      document.getElementById('encrypt-btn').disabled = true;
+      
+      plaintext.focus();
     });
 
     document.getElementById('clear-decrypt-btn').addEventListener('click', () => {
-      document.getElementById('ciphertext').value = '';
-      document.getElementById('decrypt-password').value = '';
-      document.getElementById('plaintext-output').textContent = '';
-      document.getElementById('plaintext-output').classList.remove('success', 'error');
+      const ciphertext = document.getElementById('ciphertext');
+      const password = document.getElementById('decrypt-password');
+      const output = document.getElementById('plaintext-output');
+      
+      // Check if there's any data to clear
+      const hasData = ciphertext.value.trim() || password.value || output.textContent;
+      
+      if (hasData && !confirm('Are you sure you want to clear all decryption data? This cannot be undone.')) {
+        return;
+      }
+      
+      ciphertext.value = '';
+      password.value = '';
+      output.textContent = '';
+      output.classList.remove('success', 'error');
       document.getElementById('copy-decrypt-btn').disabled = true;
       document.getElementById('ciphertext-counter').textContent = '0 characters';
       document.getElementById('ciphertext-counter').classList.remove('warning', 'danger');
@@ -1860,7 +1961,11 @@
         warning.remove();
       }
       hideStatus('decrypt-status');
-      document.getElementById('ciphertext').focus();
+      
+      // Reset validation state
+      document.getElementById('decrypt-btn').disabled = true;
+      
+      ciphertext.focus();
     });
 
     // Prevent form submissions (forms are handled via JavaScript)
@@ -2042,12 +2147,11 @@
         .replace(/'/g, '&#039;');
     }
     
-    // Sanitize error messages for user display
-    function sanitizeErrorMessage(message) {
-      if (!message || typeof message !== 'string') return 'An unexpected error occurred';
+    // Sanitize and enhance error messages for user display with actionable guidance
+    function sanitizeErrorMessage(message, context = 'general') {
+      if (!message || typeof message !== 'string') return 'An unexpected error occurred. Please try again.';
       
       // Remove any potentially sensitive information
-      // Replace specific error patterns with generic messages
       const sanitized = message
         .replace(/at\s+\w+\s+\([^)]*\)/gi, '')
         .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP]')
@@ -2055,8 +2159,27 @@
         .replace(/file:\/\/[^\s]*/g, '[FILE]')
         .replace(/\/[^\s]*\/[^\s]*/g, '[PATH]');
       
-      // Limit length
-      return sanitized.length > 200 ? sanitized.substring(0, 200) + '...' : sanitized;
+      // Provide actionable guidance based on error patterns
+      const lowerMessage = sanitized.toLowerCase();
+      
+      if (lowerMessage.includes('invalid password') || lowerMessage.includes('decryption failed')) {
+        return 'Decryption failed: The password you entered is incorrect. Please double-check your password and try again. Make sure you\'re using the same password that was used to encrypt this message.';
+      }
+      
+      if (lowerMessage.includes('invalid ciphertext') || lowerMessage.includes('corrupted')) {
+        return 'Decryption failed: The encrypted text appears to be corrupted or incomplete. Please make sure you copied the entire encrypted message, including all characters.';
+      }
+      
+      if (lowerMessage.includes('salt') && lowerMessage.includes('16 bytes')) {
+        return 'Encryption error: Invalid key format. Please try again with a valid key or generate a new one.';
+      }
+      
+      if (lowerMessage.includes('not ready') || lowerMessage.includes('not initialized')) {
+        return 'Encryption library is still loading. Please wait a moment and try again.';
+      }
+      
+      // Limit length for generic messages
+      return sanitized.length > 200 ? sanitized.substring(0, 200) + '... Please try again.' : sanitized;
     }
     
     // Reset auto-lock timer on user activity
@@ -2207,10 +2330,10 @@
     // Initialize key manager on load
     initKeyManager();
     
-    // Initialize password strength meter
-    const strengthPasswordInput = document.getElementById('strength-password');
-    if (strengthPasswordInput && typeof initStrengthMeter === 'function') {
-      initStrengthMeter(strengthPasswordInput, {
+    // Initialize password strength meter on the actual encryption password field
+    const encryptPasswordInput = document.getElementById('encrypt-password');
+    if (encryptPasswordInput && typeof initStrengthMeter === 'function') {
+      initStrengthMeter(encryptPasswordInput, {
         bar: document.getElementById('strength-bar'),
         label: document.getElementById('strength-label'),
         crackTime: document.getElementById('crack-time'),

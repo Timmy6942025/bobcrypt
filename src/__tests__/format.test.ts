@@ -30,8 +30,8 @@ describe('Algorithm-Agile Ciphertext Format', () => {
     });
     
     it('should have correct default parameters', () => {
-      expect(DEFAULT_OPSLIMIT).toBe(6);
-      expect(DEFAULT_MEMLIMIT).toBe(65536);
+      expect(DEFAULT_OPSLIMIT).toBe(10);
+      expect(DEFAULT_MEMLIMIT).toBe(262144);
     });
     
     it('should have correct size constants', () => {
@@ -273,7 +273,7 @@ describe('Algorithm-Agile Ciphertext Format', () => {
       
       const base64 = btoa(String.fromCharCode(...bytes));
       
-      expect(() => deserialize(base64)).toThrow('Unsupported format version');
+      expect(() => deserialize(base64)).toThrow('Unsupported version');
     });
     
     it('should throw error for unsupported KDF algorithm', () => {
